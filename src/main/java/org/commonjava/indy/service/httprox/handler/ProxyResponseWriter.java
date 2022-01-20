@@ -17,16 +17,17 @@ package org.commonjava.indy.service.httprox.handler;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.RequestLine;
-import org.commonjava.indy.service.httprox.util.ApplicationHeader;
-import org.commonjava.indy.service.httprox.util.ApplicationStatus;
-import org.commonjava.indy.service.httprox.util.HttpConduitWrapper;
-import org.commonjava.indy.service.httprox.util.HttpWrapper;
+import org.commonjava.indy.service.httprox.client.repository.ArtifactStore;
+import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
+import org.commonjava.indy.service.httprox.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.ChannelListener;
 import org.xnio.conduits.ConduitStreamSinkChannel;
+import static org.commonjava.indy.service.httprox.util.UserPass.parse;
 
 import java.io.IOException;
+import java.net.URL;
 
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.*;
 
@@ -37,6 +38,7 @@ public final class ProxyResponseWriter
 
     private Throwable error;
     private HttpRequest httpRequest;
+    private IndyGenericProxyConfiguration config;
 
     public ProxyResponseWriter() {
 
@@ -75,15 +77,29 @@ public final class ProxyResponseWriter
 
         logger.debug("\n\n\n>>>>>>> Handle write\n\n\n");
         if (error == null) {
-            try {
 
+            ProxyResponseHelper proxyResponseHelper =
+                    new ProxyResponseHelper( httpRequest, config );
 
+            try
+            {
+
+                final UserPass proxyUserPass = parse( ApplicationHeader.proxy_authorization, httpRequest, null );
+
+                String trackingId = null;
                 RequestLine requestLine = httpRequest.getRequestLine();
                 String method = requestLine.getMethod().toUpperCase();
 
                 switch (method) {
                     case GET_METHOD:
                     case HEAD_METHOD:
+                    {
+                        final URL url = new URL( requestLine.getUri() );
+                        logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
+                        ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
+                        proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass );
+                        break;
+                    }
                     case OPTIONS_METHOD: {
                         http.writeStatus(ApplicationStatus.OK);
                         http.writeHeader(ApplicationHeader.allow, ALLOW_HEADER_VALUE);
