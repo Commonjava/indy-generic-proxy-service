@@ -1,9 +1,9 @@
 package org.commonjava.indy.service.httprox.handler;
 
-import org.commonjava.indy.service.httprox.client.repository.Group;
-import org.commonjava.indy.service.httprox.client.repository.HostedRepository;
-import org.commonjava.indy.service.httprox.client.repository.RemoteRepository;
-import org.commonjava.indy.service.httprox.client.repository.StoreKey;
+import org.commonjava.indy.model.core.Group;
+import org.commonjava.indy.model.core.HostedRepository;
+import org.commonjava.indy.model.core.RemoteRepository;
+import org.commonjava.indy.model.core.StoreKey;
 
 import java.util.Arrays;
 import java.util.List;

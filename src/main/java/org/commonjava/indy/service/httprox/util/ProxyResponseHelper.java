@@ -16,17 +16,21 @@
 package org.commonjava.indy.service.httprox.util;
 
 import org.apache.http.HttpRequest;
-import org.commonjava.indy.service.httprox.client.repository.ArtifactStore;
-import org.commonjava.indy.service.httprox.client.repository.Group;
-import org.commonjava.indy.service.httprox.client.repository.RemoteRepository;
-import org.commonjava.indy.service.httprox.client.repository.Transfer;
+import org.commonjava.indy.model.core.ArtifactStore;
+import org.commonjava.indy.model.core.Group;
+import org.commonjava.indy.model.core.HostedRepository;
+import org.commonjava.indy.model.core.RemoteRepository;
+import org.commonjava.indy.service.httprox.client.repository.*;
 import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
+import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+
+import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 
 public class ProxyResponseHelper
 {
@@ -40,10 +44,13 @@ public class ProxyResponseHelper
 
     private boolean transferred;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, IndyGenericProxyConfiguration config )
+    private ProxyRepositoryCreator repoCreator;
+
+    public ProxyResponseHelper(HttpRequest httpRequest, IndyGenericProxyConfiguration config, ProxyRepositoryCreator repoCreator )
     {
         this.httpRequest = httpRequest;
         this.config = config;
+        this.repoCreator = repoCreator;
     }
 
     public ArtifactStore getArtifactStore(String trackingId, final URL url )
@@ -66,15 +73,25 @@ public class ProxyResponseHelper
         return store;
     }
 
-    private ArtifactStore doGetArtifactStore( String trackingId, final URL url )
+    private ArtifactStore doGetArtifactStore(String trackingId, final URL url )
                     throws IndyProxyException
     {
         int port = getPort( url );
 
         if ( trackingId != null )
         {
+            String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
+
             Group group = null;
-            //TODO check if the group exists, if not try to create it first via invoking indy REST API
+            //TODO check if the gorup exists
+
+            if ( group == null )
+            {
+                logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
+                        url, trackingId );
+                ProxyCreationResult result = createRepo( trackingId, url, null );
+                group = result.getGroup();
+            }
             return group;
         }
         else
@@ -102,9 +119,30 @@ public class ProxyResponseHelper
         String baseUrl = getBaseUrl( url, false );
 
         logger.debug( ">>>> Create repo: trackingId=" + trackingId + ", name=" + name );
-        // TODO create repo via invoking indy REST api
+        ProxyCreationResult result = repoCreator.create( trackingId, name, baseUrl, info, up,
+                LoggerFactory.getLogger( repoCreator.getClass() ) );
+        /*ChangeSummary changeSummary =
+                new ChangeSummary( ChangeSummary.SYSTEM_USER, "Creating HTTProx proxy for: " + info.getUrl() );*/
 
-        return null;
+        RemoteRepository remote = result.getRemote();
+        if ( remote != null )
+        {
+            //storeManager.storeArtifactStore( remote, changeSummary, false, true, new EventMetadata() );
+        }
+
+        HostedRepository hosted = result.getHosted();
+        if ( hosted != null )
+        {
+            //storeManager.storeArtifactStore( hosted, changeSummary, false, true, new EventMetadata() );
+        }
+
+        Group group = result.getGroup();
+        if ( group != null )
+        {
+            //storeManager.storeArtifactStore( group, changeSummary, false, true, new EventMetadata() );
+        }
+
+        return result;
     }
 
     /**
