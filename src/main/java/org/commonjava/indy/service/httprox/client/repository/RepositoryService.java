@@ -17,5 +17,5 @@ public interface RepositoryService
 
     @POST
     @Path("/{packageType}/{type: (hosted|group|remote)}")
-    Response createStore(@PathParam("packageType") String packageType, @PathParam("type") String type, StoreRequest storeRequest);
+    Response createStore(@PathParam("packageType") String packageType, @PathParam("type") String type, String store );
 }
