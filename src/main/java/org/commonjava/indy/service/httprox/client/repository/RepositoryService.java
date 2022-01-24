@@ -2,9 +2,7 @@ package org.commonjava.indy.service.httprox.client.repository;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.ws.rs.HEAD;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Path("/api/admin/stores")
@@ -16,4 +14,8 @@ public interface RepositoryService
     @Path("/{packageType}/{type: (hosted|group|remote)}/{name}")
     Response repoExists(@PathParam("packageType") String packageType, @PathParam("type") String type, @PathParam("name") String name );
 
+
+    @POST
+    @Path("/{packageType}/{type: (hosted|group|remote)}")
+    Response createStore(@PathParam("packageType") String packageType, @PathParam("type") String type, String store );
 }
