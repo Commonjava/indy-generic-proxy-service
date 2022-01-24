@@ -57,7 +57,6 @@ public class HttpProxy {
         this.acceptHandler = acceptHandler;
     }
 
-
     public void onStart(@Observes StartupEvent ev) {
         String bind = "0.0.0.0";
 

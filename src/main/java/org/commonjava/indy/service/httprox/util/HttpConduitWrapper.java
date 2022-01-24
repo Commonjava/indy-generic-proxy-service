@@ -18,14 +18,20 @@ package org.commonjava.indy.service.httprox.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
+import org.commonjava.indy.model.core.ArtifactStore;
+import org.commonjava.indy.model.util.HttpUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnio.channels.StreamSinkChannel;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import static org.commonjava.indy.service.httprox.util.ChannelUtils.flush;
+import static org.commonjava.indy.service.httprox.util.ChannelUtils.*;
 
 public class HttpConduitWrapper
         implements org.commonjava.indy.service.httprox.util.HttpWrapper {
@@ -81,6 +87,55 @@ public class HttpConduitWrapper
     private void writeClose()
             throws IOException {
         writeHeader("Connection", "close\r\n");
+    }
+
+    public void writeExistingTransfer( InputStream txfr, boolean writeBody, String path )
+            throws IOException
+    {
+        Logger logger = LoggerFactory.getLogger( getClass() );
+        logger.debug( "Valid transfer found, {}", txfr );
+        try
+        {
+
+            writeStatus( ApplicationStatus.OK );
+
+            logger.trace( "Write body, {}", writeBody );
+            if ( writeBody )
+            {
+                sinkChannel.write( ByteBuffer.wrap( "\r\n".getBytes() ) );
+
+                int capacity = DEFAULT_READ_BUF_SIZE;
+                ByteBuffer bbuf = ByteBuffer.allocate( capacity );
+                byte[] buf = new byte[capacity];
+                int read = -1;
+                logger.trace( "Read transfer..." );
+                while ( ( read = txfr.read( buf ) ) > -1 )
+                {
+                    logger.trace( "Read transfer and write to channel, size: {}", read );
+                    bbuf.clear();
+                    bbuf.put( buf, 0, read );
+                    bbuf.flip();
+                    write( sinkChannel, bbuf );
+                }
+            }
+        }
+        finally
+        {
+            //cacheProvider.cleanupCurrentThread();
+        }
+        sinkChannel.flush();
+        logger.debug( "Write transfer DONE." );
+    }
+
+    public void writeNotFoundTransfer( ArtifactStore store, String path )
+            throws IOException
+    {
+        Logger logger = LoggerFactory.getLogger( getClass() );
+        logger.debug( "No transfer found." );
+
+        writeStatus( ApplicationStatus.NOT_FOUND );
+
+        writeClose();
     }
 
     @Override
