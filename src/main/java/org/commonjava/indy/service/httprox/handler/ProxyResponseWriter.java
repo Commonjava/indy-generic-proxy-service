@@ -18,8 +18,8 @@ package org.commonjava.indy.service.httprox.handler;
 import org.apache.http.HttpRequest;
 import org.apache.http.RequestLine;
 import org.commonjava.indy.model.core.ArtifactStore;
-import org.commonjava.indy.service.httprox.client.repository.ContentRetrievalService;
-import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public final class ProxyResponseWriter
 
     private Throwable error;
     private HttpRequest httpRequest;
-    private IndyGenericProxyConfiguration config;
+    private ProxyConfiguration config;
     private ProxyRepositoryCreator repoCreator;
 
     private ConduitStreamSourceChannel sourceChannel;
@@ -51,7 +51,7 @@ public final class ProxyResponseWriter
 
     private ContentRetrievalService contentRetrievalService;
 
-    public ProxyResponseWriter(final IndyGenericProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
+    public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
                                final StreamConnection accepted, final ContentRetrievalService contentRetrievalService )
     {
         this.config = config;

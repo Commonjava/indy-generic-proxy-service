@@ -1,7 +1,7 @@
 package org.commonjava.service.httprox.client;
 
 import io.quarkus.test.junit.QuarkusTest;
-import org.commonjava.indy.service.httprox.client.repository.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.channels.StreamSinkChannel;
 
+import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -89,7 +90,7 @@ public class HttpConduitWrapper
         writeHeader("Connection", "close\r\n");
     }
 
-    public void writeExistingTransfer( InputStream txfr, boolean writeBody, String path )
+    public void writeExistingTransfer(InputStream txfr, boolean writeBody, MultivaluedMap<String, Object> headers )
             throws IOException
     {
         Logger logger = LoggerFactory.getLogger( getClass() );
@@ -98,6 +99,17 @@ public class HttpConduitWrapper
         {
 
             writeStatus( ApplicationStatus.OK );
+
+            headers.keySet().forEach( key -> {
+                logger.debug( "Setting response header: {} = {}", key, headers.get(key) );
+                try
+                {
+                    writeHeader(key, headers.get(key).toString());
+                } catch (IOException e)
+                {
+                    logger.error("Write header error: {}", e.getMessage(), e);
+                }
+            } );
 
             logger.trace( "Write body, {}", writeBody );
             if ( writeBody )
@@ -121,7 +133,7 @@ public class HttpConduitWrapper
         }
         finally
         {
-            //cacheProvider.cleanupCurrentThread();
+            //TODO
         }
         sinkChannel.flush();
         logger.debug( "Write transfer DONE." );

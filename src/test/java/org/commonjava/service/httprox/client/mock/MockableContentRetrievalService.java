@@ -2,7 +2,7 @@ package org.commonjava.service.httprox.client.mock;
 
 import io.quarkus.test.Mock;
 import org.apache.commons.io.FilenameUtils;
-import org.commonjava.indy.service.httprox.client.repository.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.handler.TransferStreamingOutput;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 

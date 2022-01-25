@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @Startup
 @ApplicationScoped
-public class IndyGenericProxyConfiguration {
+public class ProxyConfiguration {
     @Inject
     @ConfigProperty(name = "proxy.port")
     Optional<Integer> port;
