@@ -1,4 +1,4 @@
-package org.commonjava.indy.service.httprox.client.repository;
+package org.commonjava.indy.service.httprox.client.content;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 

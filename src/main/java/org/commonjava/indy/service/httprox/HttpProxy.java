@@ -18,7 +18,7 @@ package org.commonjava.indy.service.httprox;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyAcceptHandler;
 import org.commonjava.propulsor.boot.PortFinder;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class HttpProxy {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    private IndyGenericProxyConfiguration config;
+    private ProxyConfiguration config;
 
     @Inject
     private ProxyAcceptHandler acceptHandler;
@@ -52,11 +52,10 @@ public class HttpProxy {
     protected HttpProxy() {
     }
 
-    public HttpProxy(final IndyGenericProxyConfiguration config, ProxyAcceptHandler acceptHandler) {
+    public HttpProxy(final ProxyConfiguration config, ProxyAcceptHandler acceptHandler) {
         this.config = config;
         this.acceptHandler = acceptHandler;
     }
-
 
     public void onStart(@Observes StartupEvent ev) {
         String bind = "0.0.0.0";

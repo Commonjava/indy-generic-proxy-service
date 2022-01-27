@@ -15,8 +15,10 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
-import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.util.RepoCreator;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.ChannelListener;
@@ -35,7 +37,11 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     public static final String HTTPROX_ORIGIN = "httprox";
 
     @Inject
-    IndyGenericProxyConfiguration config;
+    ProxyConfiguration config;
+
+    @Inject
+    @RestClient
+    ContentRetrievalService contentRetrievalService;
 
     public ProxyAcceptHandler() {
 
@@ -66,7 +72,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted );
+                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);

@@ -16,21 +16,22 @@
 package org.commonjava.indy.service.httprox.util;
 
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpStatus;
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.model.core.Group;
 import org.commonjava.indy.model.core.HostedRepository;
 import org.commonjava.indy.model.core.RemoteRepository;
-import org.commonjava.indy.service.httprox.client.repository.*;
-import org.commonjava.indy.service.httprox.config.IndyGenericProxyConfiguration;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
+import org.commonjava.indy.service.httprox.handler.TransferStreamingOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import javax.ws.rs.core.Response;
+import java.io.*;
 import java.net.URL;
-
-import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 
 public class ProxyResponseHelper
 {
@@ -40,17 +41,20 @@ public class ProxyResponseHelper
 
     private final HttpRequest httpRequest;
 
-    private final IndyGenericProxyConfiguration config;
+    private final ProxyConfiguration config;
 
     private boolean transferred;
 
     private ProxyRepositoryCreator repoCreator;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, IndyGenericProxyConfiguration config, ProxyRepositoryCreator repoCreator )
+    private ContentRetrievalService contentRetrievalService;
+
+    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, ContentRetrievalService contentRetrievalService )
     {
         this.httpRequest = httpRequest;
         this.config = config;
         this.repoCreator = repoCreator;
+        this.contentRetrievalService = contentRetrievalService;
     }
 
     public ArtifactStore getArtifactStore(String trackingId, final URL url )
@@ -209,8 +213,28 @@ public class ProxyResponseHelper
             throw new IOException( "Sink channel already closed (or null)!" );
         }
 
-        Transfer txfr = null;
-        //TODO Get transfer and stream it back to client
+        //TODO
+        Response response = contentRetrievalService.doGet("", "", path);
+
+        if ( response.getStatus() == HttpStatus.SC_OK)
+        {
+            TransferStreamingOutput responseStream = response.readEntity(TransferStreamingOutput.class);
+            logger.info("stream back: {}", path);
+
+            PipedInputStream in = new PipedInputStream();
+
+            try (final PipedOutputStream out = new PipedOutputStream(in))
+            {
+                responseStream.write(out);
+            }
+
+            http.writeExistingTransfer(in, true, response.getHeaders());
+        }
+        else if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
+        {
+            http.writeNotFoundTransfer( store, path );
+        }
+
     }
 
 }
