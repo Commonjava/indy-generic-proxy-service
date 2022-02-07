@@ -55,6 +55,8 @@ public final class ProxyRequestReader
     private ByteArrayOutputStream bReq;
     private boolean headDone = false;
 
+    private ProxySSLTunnel sslTunnel;
+
     public ProxyRequestReader(final ProxyResponseWriter writer, final ConduitStreamSinkChannel sinkChannel) {
         this.writer = writer;
         this.sinkChannel = sinkChannel;
@@ -182,6 +184,11 @@ public final class ProxyRequestReader
                 bReq.write(bbuf);
             }
         }
+    }
+
+    public void setProxySSLTunnel( ProxySSLTunnel sslTunnel )
+    {
+        this.sslTunnel = sslTunnel;
     }
 
 }

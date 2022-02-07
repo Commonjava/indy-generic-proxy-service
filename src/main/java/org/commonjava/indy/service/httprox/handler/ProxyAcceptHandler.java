@@ -43,6 +43,9 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     @RestClient
     ContentRetrievalService contentRetrievalService;
 
+    @Inject
+    private ProxyTransfersExecutor proxyExecutor;
+
     public ProxyAcceptHandler() {
 
     }
@@ -72,12 +75,13 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService );
+                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService, proxyExecutor.getExecutor() );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
 
         final ProxyRequestReader reader = new ProxyRequestReader(writer, sink);
+        writer.setProxyRequestReader(reader);
 
         logger.debug("Setting reader: {}", reader);
         source.getReadSetter().set(reader);
