@@ -36,11 +36,9 @@ public class ProxyHttpsTest extends AbstractGenericProxyTest
     @Test
     public void run() throws Exception
     {
-
-        //System.setProperty("jdk.tls.client.protocols", "TLSv1.3");
-
+        //TODO
         etcDir = new File("/tmp");
-        //initTestData();
+        initTestData();
 
         String ret = get( https_url, true, USER, PASS );
         assertTrue( ret.contains( "<artifactId>indy-api</artifactId>" ) );
