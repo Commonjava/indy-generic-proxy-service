@@ -109,6 +109,11 @@ public final class ProxyResponseWriter
             logger.trace("Sink channel closing.");
             Thread.currentThread().setName(oldThreadName);
 
+            if ( sslTunnel != null )
+            {
+                logger.trace( "Close ssl tunnel" );
+                sslTunnel.close();
+            }
         });
 
         logger.debug("\n\n\n>>>>>>> Handle write\n\n\n");

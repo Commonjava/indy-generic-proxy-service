@@ -15,6 +15,7 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -53,6 +54,7 @@ public final class ProxyRequestReader
     private final ConduitStreamSinkChannel sinkChannel;
     private final List<Character> lastFour = new ArrayList<>();
     private ByteArrayOutputStream bReq;
+    private PrintStream pReq;
     private boolean headDone = false;
 
     private ProxySSLTunnel sslTunnel;
@@ -74,6 +76,13 @@ public final class ProxyRequestReader
             }
 
             byte[] bytes = bReq.toByteArray();
+
+            if ( sslTunnel != null )
+            {
+                logger.info( "Send to ssl tunnel, {}, bytes:\n\n {}\n", new String( bytes ), Hex.encodeHexString( bytes ) );
+                directTo( sslTunnel );
+                return;
+            }
 
             logger.debug("Request in progress is:\n\n{}", new String(bytes));
 
@@ -120,32 +129,36 @@ public final class ProxyRequestReader
     }
 
     private int doRead(final ConduitStreamSourceChannel channel)
-            throws IOException {
+            throws IOException
+    {
         bReq = new ByteArrayOutputStream();
-        PrintStream pReq = new PrintStream(bReq);
+        pReq = new PrintStream( bReq );
 
-        logger.debug("Starting read: {}", channel);
+        logger.debug( "Starting read: {}", channel );
 
         int total = 0;
-        while (true) {
-            ByteBuffer buf = ByteBuffer.allocate(1024);
-            channel.awaitReadable(AWAIT_READABLE_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        while ( true )
+        {
+            ByteBuffer buf = ByteBuffer.allocate( 1024 );
+            channel.awaitReadable( AWAIT_READABLE_IN_MILLISECONDS, TimeUnit.MILLISECONDS );
 
-            int read = channel.read(buf); // return the number of bytes read, possibly zero, or -1
+            int read = channel.read( buf ); // return the number of bytes read, possibly zero, or -1
 
-            logger.debug("Read {} bytes", read);
+            logger.debug( "Read {} bytes", read );
 
-            if (read == -1) // return -1 if the channel has reached end-of-stream
+            if ( read == -1 ) // return -1 if the channel has reached end-of-stream
             {
-                if (total == 0) // nothing read, return -1 to indicate the EOF
+                if ( total == 0 ) // nothing read, return -1 to indicate the EOF
                 {
                     return -1;
-                } else {
+                }
+                else
+                {
                     return total;
                 }
             }
 
-            if (read == 0) // no new bytes this time
+            if ( read == 0 ) // no new bytes this time
             {
                 return total;
             }
@@ -154,36 +167,59 @@ public final class ProxyRequestReader
 
             buf.flip();
             byte[] bbuf = new byte[buf.limit()];
-            buf.get(bbuf);
+            buf.get( bbuf );
 
-            if (!headDone) {
+            if ( !headDone )
+            {
                 // allows us to stop after header read...
-                final String part = new String(bbuf);
-                for (final char c : part.toCharArray()) {
-                    if (c == '\n') {
-                        while (lastFour.size() > 3) {
-                            lastFour.remove(0);
-                        }
-
-                        lastFour.add(c);
-                        try {
-                            if (bReq.size() > 0 && HEAD_END.equals(lastFour)) {
-                                logger.debug("Detected end of request headers.");
-                                headDone = true;
-
-                                logger.trace("Proxy request header:\n{}\n", bReq.toString());
+                final String part = new String( bbuf );
+                for ( final char c : part.toCharArray() )
+                {
+                    switch ( c )
+                    {
+                        case '\n':
+                        {
+                            while ( lastFour.size() > 3 )
+                            {
+                                lastFour.remove(0);
                             }
-                        } finally {
-                            lastFour.remove(lastFour.size() - 1);
+
+                            lastFour.add( c );
+                            try
+                            {
+                                if ( bReq.size() > 0 && HEAD_END.equals( lastFour ) )
+                                {
+                                    logger.debug( "Detected end of request headers." );
+                                    headDone = true;
+
+                                    logger.trace( "Proxy request header:\n{}\n", new String( bReq.toByteArray() ) );
+                                }
+                            }
+                            finally
+                            {
+                                lastFour.remove( lastFour.size() - 1 );
+                            }
+                        }
+                        default:
+                        {
+                            pReq.print( c );
+                            lastFour.add( c );
                         }
                     }
-                    pReq.print(c);
-                    lastFour.add(c);
                 }
-            } else {
-                bReq.write(bbuf);
+            }
+            else
+            {
+                bReq.write( bbuf );
             }
         }
+    }
+
+    private void directTo( ProxySSLTunnel sslTunnel ) throws IOException
+    {
+        byte[] bytes = bReq.toByteArray();
+        logger.info( "Write client data to ssl tunnel, size: {}", bytes.length );
+        sslTunnel.write( bytes );
     }
 
     public void setProxySSLTunnel( ProxySSLTunnel sslTunnel )
