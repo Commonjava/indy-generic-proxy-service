@@ -85,7 +85,14 @@ public final class ProxyResponseWriter
         doHandleEvent(channel);
     }
 
-    private void doHandleEvent(final ConduitStreamSinkChannel sinkChannel) {
+    private void doHandleEvent(final ConduitStreamSinkChannel sinkChannel)
+    {
+
+        if ( directed )
+        {
+            return;
+        }
+
         HttpConduitWrapper http = new HttpConduitWrapper(sinkChannel, httpRequest);
         if (httpRequest == null) {
             if (error != null) {
@@ -211,9 +218,19 @@ public final class ProxyResponseWriter
             handleError(error, http);
         }
 
-        try {
-            http.close();
-        } catch (final IOException e) {
+        try
+        {
+            if ( directed )
+            {
+                // do not close sink channel
+            }
+            else
+            {
+                http.close();
+            }
+        }
+        catch (final IOException e)
+        {
             logger.error("Failed to shutdown response", e);
         }
 
