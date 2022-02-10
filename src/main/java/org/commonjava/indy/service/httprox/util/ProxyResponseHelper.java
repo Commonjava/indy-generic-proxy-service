@@ -15,23 +15,27 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
-import org.commonjava.indy.model.core.ArtifactStore;
-import org.commonjava.indy.model.core.Group;
-import org.commonjava.indy.model.core.HostedRepository;
-import org.commonjava.indy.model.core.RemoteRepository;
+import org.commonjava.indy.model.core.*;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
 import org.commonjava.indy.service.httprox.handler.TransferStreamingOutput;
+import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.io.*;
 import java.net.URL;
+
+import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
+import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
+import static org.commonjava.indy.service.httprox.model.TrackingType.ALWAYS;
+import static org.commonjava.indy.service.httprox.model.TrackingType.SUFFIX;
 
 public class ProxyResponseHelper
 {
@@ -101,7 +105,28 @@ public class ProxyResponseHelper
         else
         {
             RemoteRepository remote = null;
-            //TODO check if the remote repo exists, if not try to create it first via invoking indy REST API
+            final String baseUrl = getBaseUrl( url, false );
+            logger.info("baseUrl: {}", baseUrl);
+
+            /*ArtifactStoreQuery<RemoteRepository> query =
+                    storeManager.query().storeType( RemoteRepository.class );
+
+            remote = query.getAllRemoteRepositories( GENERIC_PKG_KEY )
+                    .stream()
+                    .filter( store -> store.getUrl().equals( baseUrl )
+                            && store.getMetadata( TRACKING_ID ) == null )
+                    .findFirst()
+                    .orElse( null );*/
+
+            logger.debug( "Get httproxy remote, remote: {}", remote );
+            if ( remote == null )
+            {
+                logger.debug( "Creating remote repository for HTTProx request: {}", url );
+                String name = getRemoteRepositoryName( url );
+                logger.info("remote repo name: {} based on url: {}", name, url);
+                ProxyCreationResult result = createRepo( null, url, name );
+                remote = result.getRemote();
+            }
             return remote;
         }
     }
@@ -154,8 +179,9 @@ public class ProxyResponseHelper
      */
     private String getRemoteRepositoryName( URL url ) throws IndyProxyException
     {
+        final String name = repoCreator.formatId( url.getHost(), getPort( url ), 0, null, StoreType.remote.name() );
         //TODO
-        return null;
+        return name;
     }
 
     private int getPort( URL url )
@@ -235,6 +261,44 @@ public class ProxyResponseHelper
             http.writeNotFoundTransfer( store, path );
         }
 
+    }
+
+    public TrackingKey getTrackingKey(UserPass proxyUserPass ) throws IndyProxyException
+    {
+        TrackingKey tk = null;
+        switch ( config.getTrackingType() )
+        {
+            case ALWAYS:
+            {
+                if ( proxyUserPass == null )
+                {
+                    throw new IndyProxyException( ApplicationStatus.BAD_REQUEST.code(),
+                            "Tracking is always-on, but no username was provided! Cannot initialize tracking key." );
+                }
+
+                tk = new TrackingKey( proxyUserPass.getUser() );
+
+                break;
+            }
+            case SUFFIX:
+            {
+                if ( proxyUserPass != null )
+                {
+                    final String user = proxyUserPass.getUser();
+
+                    if ( user != null && user.endsWith( TRACKED_USER_SUFFIX ) && user.length() > TRACKED_USER_SUFFIX.length() )
+                    {
+                        tk = new TrackingKey( StringUtils.substring( user, 0, - TRACKED_USER_SUFFIX.length() ) );
+                    }
+                }
+
+                break;
+            }
+            default:
+            {
+            }
+        }
+        return tk;
     }
 
 }

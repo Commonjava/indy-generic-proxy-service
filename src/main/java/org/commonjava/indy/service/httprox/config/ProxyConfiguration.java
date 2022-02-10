@@ -16,6 +16,7 @@
 package org.commonjava.indy.service.httprox.config;
 
 import io.quarkus.runtime.Startup;
+import org.commonjava.indy.service.httprox.model.TrackingType;
 import org.commonjava.propulsor.config.annotation.ConfigName;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -28,6 +29,8 @@ import java.util.Optional;
 public class ProxyConfiguration {
 
     private static final int DEFAULT_MITM_SO_TIMEOUT_MINUTES = 30;
+
+    private static final String DEFAULT_TRACKING_TYPE = TrackingType.SUFFIX.name();
 
     @Inject
     @ConfigProperty(name = "proxy.port")
@@ -52,6 +55,14 @@ public class ProxyConfiguration {
     @Inject
     @ConfigProperty(name = "MITM.so.timeout.minutes")
     public Integer MITMSoTimeoutMinutes;
+
+    @Inject
+    @ConfigProperty(name="secured")
+    public Boolean secured;
+
+    @Inject
+    @ConfigProperty(name="tracking.type")
+    public String trackingType;
 
     public Integer getPort() {
         return port.orElse(8081);
@@ -107,5 +118,26 @@ public class ProxyConfiguration {
     public void setMITMSoTimeoutMinutes( Integer MITMSoTimeoutMinutes )
     {
         this.MITMSoTimeoutMinutes = MITMSoTimeoutMinutes;
+    }
+
+    public Boolean getMITMEnabled() {
+        return MITMEnabled;
+    }
+
+    public Boolean getSecured() {
+        return secured;
+    }
+
+    public void setSecured(Boolean secured) {
+        this.secured = secured;
+    }
+
+    public TrackingType getTrackingType()
+    {
+        return TrackingType.valueOf( trackingType == null ? DEFAULT_TRACKING_TYPE : trackingType.toUpperCase() );
+    }
+
+    public void setTrackingType(TrackingType trackingType) {
+        this.trackingType = trackingType.name();
     }
 }

@@ -21,6 +21,7 @@ import org.commonjava.cdi.util.weft.WeftExecutorService;
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
+import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.commonjava.indy.service.httprox.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.TimeUnit;
 
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.*;
 
@@ -138,6 +140,16 @@ public final class ProxyResponseWriter
                 RequestLine requestLine = httpRequest.getRequestLine();
                 String method = requestLine.getMethod().toUpperCase();
 
+                if ( proxyUserPass != null )
+                {
+                    TrackingKey trackingKey = proxyResponseHelper.getTrackingKey( proxyUserPass );
+                    if ( trackingKey != null )
+                    {
+                        trackingId = trackingKey.getId();
+                    }
+
+                }
+                
                 switch (method) {
                     case GET_METHOD:
                     case HEAD_METHOD:
