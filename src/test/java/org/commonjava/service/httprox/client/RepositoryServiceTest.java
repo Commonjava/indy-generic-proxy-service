@@ -37,4 +37,10 @@ public class RepositoryServiceTest
         repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", new IndyObjectMapper(false).writeValueAsString(hostedRepository));
     }
 
+    //@Test
+    public void testGetRemoteByUrl()
+    {
+        repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", "http://download.jboss.org:80/");
+    }
+
 }
