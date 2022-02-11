@@ -68,7 +68,7 @@ public class ProxyHttpsDownloadTgzTest extends AbstractGenericProxyTest
             }
 
             stream = response.getEntity().getContent();
-            File file = null;//TODO getTemp().newFile();
+            File file = new File("/tmp/a.tgz");
             FileOutputStream fileOutputStream = new FileOutputStream( file );
             IOUtils.copy( stream, fileOutputStream );
             fileOutputStream.close();

@@ -1,11 +1,8 @@
 package org.commonjava.service.httprox;
 
 import io.quarkus.test.junit.QuarkusTest;
-import org.commonjava.indy.model.core.Group;
-import org.commonjava.indy.model.core.dto.StoreListingDTO;
 import org.junit.jupiter.api.Test;
 
-import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest

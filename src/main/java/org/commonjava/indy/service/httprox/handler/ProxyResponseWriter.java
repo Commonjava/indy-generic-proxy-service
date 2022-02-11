@@ -19,7 +19,9 @@ import org.apache.http.HttpRequest;
 import org.apache.http.RequestLine;
 import org.commonjava.cdi.util.weft.WeftExecutorService;
 import org.commonjava.indy.model.core.ArtifactStore;
+import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.commonjava.indy.service.httprox.util.*;
@@ -55,6 +57,7 @@ public final class ProxyResponseWriter
     private SocketAddress peerAddress;
 
     private ContentRetrievalService contentRetrievalService;
+    private RepositoryService repositoryService;
 
     private ProxySSLTunnel sslTunnel;
     private boolean directed = false;
@@ -62,16 +65,21 @@ public final class ProxyResponseWriter
     private ProxyRequestReader proxyRequestReader;
     private final WeftExecutorService tunnelAndMITMExecutor;
 
+    private IndyObjectMapper indyObjectMapper;
+
     public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
                                final StreamConnection accepted, final ContentRetrievalService contentRetrievalService,
-                               final WeftExecutorService executor )
+                               final RepositoryService repositoryService, final WeftExecutorService executor,
+                               final IndyObjectMapper indyObjectMapper )
     {
         this.config = config;
         this.repoCreator = repoCreator;
         this.peerAddress = accepted.getPeerAddress();
         this.sourceChannel = accepted.getSourceChannel();
         this.contentRetrievalService = contentRetrievalService;
+        this.repositoryService = repositoryService;
         this.tunnelAndMITMExecutor = executor;
+        this.indyObjectMapper = indyObjectMapper;
     }
 
     public ProxyRequestReader getProxyRequestReader() {
@@ -129,7 +137,7 @@ public final class ProxyResponseWriter
         if (error == null) {
 
             ProxyResponseHelper proxyResponseHelper =
-                    new ProxyResponseHelper( httpRequest, config, repoCreator, contentRetrievalService );
+                    new ProxyResponseHelper( httpRequest, config, repoCreator, contentRetrievalService, repositoryService, indyObjectMapper );
 
             try
             {
@@ -149,7 +157,7 @@ public final class ProxyResponseWriter
                     }
 
                 }
-                
+
                 switch (method) {
                     case GET_METHOD:
                     case HEAD_METHOD:

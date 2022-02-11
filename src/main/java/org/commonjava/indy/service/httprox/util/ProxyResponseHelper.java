@@ -15,11 +15,15 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
 import org.commonjava.indy.model.core.*;
+import org.commonjava.indy.model.core.io.IndyObjectMapper;
+import org.commonjava.indy.pkg.PackageTypeConstants;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
@@ -36,6 +40,7 @@ import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 import static org.commonjava.indy.service.httprox.model.TrackingType.ALWAYS;
 import static org.commonjava.indy.service.httprox.model.TrackingType.SUFFIX;
+import static org.commonjava.indy.service.httprox.util.ChannelUtils.DEFAULT_READ_BUF_SIZE;
 
 public class ProxyResponseHelper
 {
@@ -53,12 +58,18 @@ public class ProxyResponseHelper
 
     private ContentRetrievalService contentRetrievalService;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, ContentRetrievalService contentRetrievalService )
+    private RepositoryService repositoryService;
+
+    private IndyObjectMapper indyObjectMapper;
+
+    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, ContentRetrievalService contentRetrievalService, RepositoryService repositoryService, IndyObjectMapper indyObjectMapper )
     {
         this.httpRequest = httpRequest;
         this.config = config;
         this.repoCreator = repoCreator;
         this.contentRetrievalService = contentRetrievalService;
+        this.repositoryService = repositoryService;
+        this.indyObjectMapper = indyObjectMapper;
     }
 
     public ArtifactStore getArtifactStore(String trackingId, final URL url )
@@ -156,19 +167,41 @@ public class ProxyResponseHelper
         RemoteRepository remote = result.getRemote();
         if ( remote != null )
         {
-            //storeManager.storeArtifactStore( remote, changeSummary, false, true, new EventMetadata() );
+            try
+            {
+                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
+            }
+            catch (JsonProcessingException e)
+            {
+                throw new IndyProxyException("");
+            }
+
         }
 
         HostedRepository hosted = result.getHosted();
         if ( hosted != null )
         {
-            //storeManager.storeArtifactStore( hosted, changeSummary, false, true, new EventMetadata() );
+            try
+            {
+                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
+            }
+            catch (JsonProcessingException e)
+            {
+                throw new IndyProxyException("");
+            }
         }
 
         Group group = result.getGroup();
         if ( group != null )
         {
-            //storeManager.storeArtifactStore( group, changeSummary, false, true, new EventMetadata() );
+            try
+            {
+                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", indyObjectMapper.writeValueAsString(group));
+            }
+            catch (JsonProcessingException e)
+            {
+                throw new IndyProxyException("");
+            }
         }
 
         return result;
@@ -247,14 +280,15 @@ public class ProxyResponseHelper
             TransferStreamingOutput responseStream = response.readEntity(TransferStreamingOutput.class);
             logger.info("stream back: {}", path);
 
-            PipedInputStream in = new PipedInputStream();
+            ByteArrayInputStream inputStream;
 
-            try (final PipedOutputStream out = new PipedOutputStream(in))
+            try ( ByteArrayOutputStream outputStream = new ByteArrayOutputStream() )
             {
-                responseStream.write(out);
+                responseStream.write( outputStream );
+                inputStream = new ByteArrayInputStream( outputStream.toByteArray() );
             }
 
-            http.writeExistingTransfer(in, true, response.getHeaders());
+            http.writeExistingTransfer(inputStream, true, response.getHeaders());
         }
         else if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
         {

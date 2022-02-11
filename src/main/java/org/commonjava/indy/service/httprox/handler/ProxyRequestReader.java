@@ -83,7 +83,7 @@ public final class ProxyRequestReader
 
             if ( sslTunnel != null )
             {
-                logger.info( "Send to ssl tunnel, {}, bytes:\n\n {}\n", new String( bytes ), Hex.encodeHexString( bytes ) );
+                logger.debug( "Send to ssl tunnel, {}, bytes:\n\n {}\n", new String( bytes ), Hex.encodeHexString( bytes ) );
                 directTo( sslTunnel );
                 return;
             }
