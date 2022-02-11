@@ -30,7 +30,9 @@
         <propulsorVersion>1.4</propulsorVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
-        <weftVersion>1.19-SNAPSHOT</weftVersion>
+        <indyVersion>2.6.4</indyVersion>
+        <bouncycastleVersion>1.64</bouncycastleVersion>
+        <weftVersion>1.20</weftVersion>
     </properties>
 
     <dependencies>
@@ -39,7 +41,7 @@
             <artifactId>indy-event-model</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- quarkus deps start -->
+        <!-- quarkus deps start
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
@@ -64,6 +66,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-context-propagation</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-config-yaml</artifactId>
@@ -73,6 +76,7 @@
             <artifactId>quarkus-junit5</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-undertow</artifactId>
@@ -81,6 +85,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -123,7 +128,23 @@
         <dependency>
             <groupId>org.commonjava.indy</groupId>
             <artifactId>indy-model-core-java</artifactId>
-            <version>2.6.4-SNAPSHOT</version>
+            <version>${indyVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonjava.cdi.util</groupId>
+            <artifactId>weft</artifactId>
+            <version>${weftVersion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bouncycastleVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${bouncycastleVersion}</version>
         </dependency>
     </dependencies>
 
