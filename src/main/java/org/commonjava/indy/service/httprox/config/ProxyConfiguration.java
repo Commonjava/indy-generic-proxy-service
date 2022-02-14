@@ -26,43 +26,43 @@ import java.util.Optional;
 
 @Startup
 @ApplicationScoped
-public class ProxyConfiguration {
+public class ProxyConfiguration
+{
+
+    private static final boolean DEFAULT_SECURED = false;
 
     private static final int DEFAULT_MITM_SO_TIMEOUT_MINUTES = 30;
 
     private static final String DEFAULT_TRACKING_TYPE = TrackingType.SUFFIX.name();
 
-    @Inject
+    private static final String DEFAULT_PROXY_REALM = "httprox";
+
     @ConfigProperty(name = "proxy.port")
     Optional<Integer> port;
 
-    @Inject
     @ConfigProperty(name = "MITM.enabled")
     public Boolean MITMEnabled;
 
-    @Inject
     @ConfigProperty(name = "MITM.ca.key")
     public String MITMCAKey;
 
-    @Inject
     @ConfigProperty(name = "MITM.ca.cert")
     public String MITMCACert;
 
-    @Inject
     @ConfigProperty(name = "MITM.dn.template")
     public String MITMDNTemplate;
 
-    @Inject
     @ConfigProperty(name = "MITM.so.timeout.minutes")
     public Integer MITMSoTimeoutMinutes;
 
-    @Inject
-    @ConfigProperty(name="secured")
+    @ConfigProperty(name="proxy.secured")
     public Boolean secured;
 
-    @Inject
     @ConfigProperty(name="tracking.type")
     public String trackingType;
+
+    @ConfigProperty( name="proxy.realm", defaultValue = DEFAULT_PROXY_REALM )
+    public String proxyRealm;
 
     public Integer getPort() {
         return port.orElse(8081);
@@ -128,6 +128,8 @@ public class ProxyConfiguration {
         return secured;
     }
 
+    public Boolean isSecured() { return secured == null ? DEFAULT_SECURED : secured; }
+
     public void setSecured(Boolean secured) {
         this.secured = secured;
     }
@@ -139,5 +141,15 @@ public class ProxyConfiguration {
 
     public void setTrackingType(TrackingType trackingType) {
         this.trackingType = trackingType.name();
+    }
+
+    public String getProxyRealm()
+    {
+        return proxyRealm == null ? DEFAULT_PROXY_REALM : proxyRealm ;
+    }
+
+    public void setProxyRealm(String proxyRealm)
+    {
+        this.proxyRealm = proxyRealm;
     }
 }

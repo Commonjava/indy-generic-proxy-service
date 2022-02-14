@@ -23,7 +23,9 @@ import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
+import org.commonjava.indy.service.httprox.keycloak.KeycloakProxyAuthenticator;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
+import org.commonjava.indy.service.httprox.model.TrackingType;
 import org.commonjava.indy.service.httprox.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,9 @@ import org.xnio.conduits.ConduitStreamSinkChannel;
 import org.xnio.conduits.ConduitStreamSourceChannel;
 
 import static java.lang.Integer.parseInt;
+import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
+import static org.commonjava.indy.service.httprox.util.ApplicationHeader.proxy_authenticate;
+import static org.commonjava.indy.service.httprox.util.ApplicationStatus.PROXY_AUTHENTICATION_REQUIRED;
 import static org.commonjava.indy.service.httprox.util.UserPass.parse;
 
 import java.io.IOException;
@@ -65,12 +70,14 @@ public final class ProxyResponseWriter
     private ProxyRequestReader proxyRequestReader;
     private final WeftExecutorService tunnelAndMITMExecutor;
 
+    private KeycloakProxyAuthenticator proxyAuthenticator;
+
     private IndyObjectMapper indyObjectMapper;
 
     public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
                                final StreamConnection accepted, final ContentRetrievalService contentRetrievalService,
                                final RepositoryService repositoryService, final WeftExecutorService executor,
-                               final IndyObjectMapper indyObjectMapper )
+                               final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper )
     {
         this.config = config;
         this.repoCreator = repoCreator;
@@ -79,6 +86,7 @@ public final class ProxyResponseWriter
         this.contentRetrievalService = contentRetrievalService;
         this.repositoryService = repositoryService;
         this.tunnelAndMITMExecutor = executor;
+        this.proxyAuthenticator = proxyAuthenticator;
         this.indyObjectMapper = indyObjectMapper;
     }
 
@@ -143,88 +151,128 @@ public final class ProxyResponseWriter
             {
 
                 final UserPass proxyUserPass = parse( ApplicationHeader.proxy_authorization, httpRequest, null );
+                logger.info( "Using proxy authentication: {}", proxyUserPass );
 
-                String trackingId = null;
-                RequestLine requestLine = httpRequest.getRequestLine();
-                String method = requestLine.getMethod().toUpperCase();
-
-                if ( proxyUserPass != null )
+                logger.debug( "Proxy UserPass: {}\nConfig secured? {}\nConfig tracking type: {}", proxyUserPass,
+                        config.isSecured(), config.getTrackingType() );
+                if ( proxyUserPass == null && ( config.isSecured() || TrackingType.ALWAYS == config.getTrackingType() ) )
                 {
-                    TrackingKey trackingKey = proxyResponseHelper.getTrackingKey( proxyUserPass );
-                    if ( trackingKey != null )
-                    {
-                        trackingId = trackingKey.getId();
-                    }
 
+                    String realmInfo = String.format( PROXY_AUTHENTICATE_FORMAT, config.getProxyRealm() );
+
+                    logger.info( "Not authenticated to proxy. Sending response: {} / {}: {}",
+                            PROXY_AUTHENTICATION_REQUIRED, proxy_authenticate, realmInfo );
+
+                    http.writeStatus( PROXY_AUTHENTICATION_REQUIRED );
+                    http.writeHeader( proxy_authenticate, realmInfo );
                 }
+                else
+                {
+                    String trackingId = null;
+                    RequestLine requestLine = httpRequest.getRequestLine();
+                    String method = requestLine.getMethod().toUpperCase();
+                    boolean authenticated = true;
 
-                switch (method) {
-                    case GET_METHOD:
-                    case HEAD_METHOD:
+                    if ( proxyUserPass != null )
                     {
-                        final URL url = new URL( requestLine.getUri() );
-                        logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
-                        ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
-                        proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass );
-                        break;
-                    }
-                    case OPTIONS_METHOD:
-                    {
-                        http.writeStatus(ApplicationStatus.OK);
-                        http.writeHeader(ApplicationHeader.allow, ALLOW_HEADER_VALUE);
-                        break;
-                    }
-                    case CONNECT_METHOD:
-                    {
-                        if ( !config.isMITMEnabled() )
+                        TrackingKey trackingKey = proxyResponseHelper.getTrackingKey( proxyUserPass );
+                        if ( trackingKey != null )
                         {
-                            logger.debug( "CONNECT method not supported unless MITM-proxying is enabled." );
-                            http.writeStatus( ApplicationStatus.BAD_REQUEST );
-                            break;
+                            trackingId = trackingKey.getId();
                         }
 
-                        String uri = requestLine.getUri(); // e.g, github.com:443
-                        logger.debug( "Get CONNECT request, uri: {}", uri );
-
-                        String[] toks = uri.split( ":" );
-                        String host = toks[0];
-                        int port = parseInt( toks[1] );
-
-                        directed = true;
-
-                        // After this, the proxy simply opens a plain socket to the target server and relays
-                        // everything between the initial client and the target server (including the TLS handshake).
-
-                        SocketChannel socketChannel;
-
-                        ProxyMITMSSLServer svr =
-                                new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
-                                        proxyResponseHelper, config );
-                        tunnelAndMITMExecutor.submit( svr );
-                        socketChannel = svr.getSocketChannel();
-
-                        if ( socketChannel == null )
+                        String authCacheKey = generateAuthCacheKey( proxyUserPass );
+                        Boolean isAuthToken = false;//proxyAuthCache.get( authCacheKey );
+                        if ( Boolean.TRUE.equals( isAuthToken ) )
                         {
-                            logger.debug( "Failed to get MITM socket channel" );
-                            http.writeStatus( ApplicationStatus.SERVER_ERROR );
-                            svr.stop();
-                            break;
+                            authenticated = true;
+                            logger.debug( "Found auth key in cache" );
                         }
+                        else
+                        {
+                            logger.debug(
+                                    "Passing BASIC authentication credentials to Keycloak bearer-token translation authenticator" );
+                            authenticated = proxyAuthenticator.authenticate( proxyUserPass, http );
+                            /*if ( authenticated )
+                            {
+                                proxyAuthCache.put( authCacheKey, Boolean.TRUE, config.getAuthCacheExpirationHours(), TimeUnit.HOURS );
+                            }*/
+                        }
+                        logger.debug( "Authentication done, result: {}", authenticated );
 
-                        sslTunnel = new ProxySSLTunnel( sinkChannel, socketChannel, config );
-                        tunnelAndMITMExecutor.submit( sslTunnel );
-                        proxyRequestReader.setProxySSLTunnel( sslTunnel ); // client input will be directed to target socket
-
-                        // When all is ready, send the 200 to client. Client send the SSL handshake to reader,
-                        // reader direct it to tunnel to MITM. MITM finish the handshake and read the request data,
-                        // retrieve remote content and send back to tunnel to client.
-                        http.writeStatus( ApplicationStatus.OK );
-                        http.writeHeader( "Status", "200 OK\n" );
-
-                        break;
                     }
-                    default: {
-                        http.writeStatus(ApplicationStatus.METHOD_NOT_ALLOWED);
+
+                    if ( authenticated )
+                    {
+                        switch (method) {
+                            case GET_METHOD:
+                            case HEAD_METHOD:
+                            {
+                                final URL url = new URL( requestLine.getUri() );
+                                logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
+                                ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
+                                proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass );
+                                break;
+                            }
+                            case OPTIONS_METHOD:
+                            {
+                                http.writeStatus(ApplicationStatus.OK);
+                                http.writeHeader(ApplicationHeader.allow, ALLOW_HEADER_VALUE);
+                                break;
+                            }
+                            case CONNECT_METHOD:
+                            {
+                                if ( !config.isMITMEnabled() )
+                                {
+                                    logger.debug( "CONNECT method not supported unless MITM-proxying is enabled." );
+                                    http.writeStatus( ApplicationStatus.BAD_REQUEST );
+                                    break;
+                                }
+
+                                String uri = requestLine.getUri(); // e.g, github.com:443
+                                logger.debug( "Get CONNECT request, uri: {}", uri );
+
+                                String[] toks = uri.split( ":" );
+                                String host = toks[0];
+                                int port = parseInt( toks[1] );
+
+                                directed = true;
+
+                                // After this, the proxy simply opens a plain socket to the target server and relays
+                                // everything between the initial client and the target server (including the TLS handshake).
+
+                                SocketChannel socketChannel;
+
+                                ProxyMITMSSLServer svr =
+                                        new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
+                                                proxyResponseHelper, config );
+                                tunnelAndMITMExecutor.submit( svr );
+                                socketChannel = svr.getSocketChannel();
+
+                                if ( socketChannel == null )
+                                {
+                                    logger.debug( "Failed to get MITM socket channel" );
+                                    http.writeStatus( ApplicationStatus.SERVER_ERROR );
+                                    svr.stop();
+                                    break;
+                                }
+
+                                sslTunnel = new ProxySSLTunnel( sinkChannel, socketChannel, config );
+                                tunnelAndMITMExecutor.submit( sslTunnel );
+                                proxyRequestReader.setProxySSLTunnel( sslTunnel ); // client input will be directed to target socket
+
+                                // When all is ready, send the 200 to client. Client send the SSL handshake to reader,
+                                // reader direct it to tunnel to MITM. MITM finish the handshake and read the request data,
+                                // retrieve remote content and send back to tunnel to client.
+                                http.writeStatus( ApplicationStatus.OK );
+                                http.writeHeader( "Status", "200 OK\n" );
+
+                                break;
+                            }
+                            default: {
+                                http.writeStatus(ApplicationStatus.METHOD_NOT_ALLOWED);
+                            }
+                        }
                     }
                 }
 
@@ -254,6 +302,11 @@ public final class ProxyResponseWriter
             logger.error("Failed to shutdown response", e);
         }
 
+    }
+
+    private String generateAuthCacheKey( UserPass proxyUserPass )
+    {
+        return sha256Hex( proxyUserPass.getUser() + ":" + proxyUserPass.getPassword() );
     }
 
     private void handleError(final Throwable error, final HttpWrapper http) {

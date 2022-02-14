@@ -19,6 +19,7 @@ import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
+import org.commonjava.indy.service.httprox.keycloak.KeycloakProxyAuthenticator;
 import org.commonjava.indy.service.httprox.util.RepoCreator;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
@@ -48,6 +49,9 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     @Inject
     @RestClient
     RepositoryService repositoryService;
+
+    @Inject
+    KeycloakProxyAuthenticator proxyAuthenticator;
 
     @Inject
     private ProxyTransfersExecutor proxyExecutor;
@@ -81,7 +85,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService, repositoryService, proxyExecutor.getExecutor(), new IndyObjectMapper(false) );
+                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService, repositoryService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false) );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
