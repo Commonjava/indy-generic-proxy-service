@@ -18,4 +18,8 @@ public interface RepositoryService
     @POST
     @Path("/{packageType}/{type: (hosted|group|remote)}")
     Response createStore(@PathParam("packageType") String packageType, @PathParam("type") String type, String store );
+
+    @GET
+    @Path("/{packageType}/{type: (remote)}/query/byUrl")
+    Response getRemoteByUrl(@PathParam("packageType") String packageType, @PathParam("type") String type, @QueryParam("url") String url );
 }

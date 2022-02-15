@@ -33,6 +33,7 @@
         <indyVersion>2.6.4</indyVersion>
         <bouncycastleVersion>1.64</bouncycastleVersion>
         <weftVersion>1.20</weftVersion>
+        <keycloakVersion>7.0.1</keycloakVersion>
     </properties>
 
     <dependencies>
@@ -70,6 +71,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-config-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -145,6 +150,17 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>${bouncycastleVersion}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-core</artifactId>
+            <version>${keycloakVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-adapter-core</artifactId>
+            <version>${keycloakVersion}</version>
         </dependency>
     </dependencies>
 

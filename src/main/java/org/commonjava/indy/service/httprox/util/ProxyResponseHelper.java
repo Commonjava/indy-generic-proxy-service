@@ -272,8 +272,7 @@ public class ProxyResponseHelper
             throw new IOException( "Sink channel already closed (or null)!" );
         }
 
-        //TODO
-        Response response = contentRetrievalService.doGet("", "", path);
+        Response response = contentRetrievalService.doGet(store.getType().name(), store.getName(), path);
 
         if ( response.getStatus() == HttpStatus.SC_OK)
         {
