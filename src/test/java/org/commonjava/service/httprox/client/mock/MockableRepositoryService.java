@@ -48,6 +48,23 @@ public class MockableRepositoryService implements RepositoryService
     }
 
     @Override
+    public Response getStore(String packageType, String type, String name) {
+        final StoreType st = StoreType.get(type);
+        final StoreKey key = new StoreKey(packageType, st, name);
+        if ( !artifactStoreMap.containsKey(key) )
+        {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        else
+        {
+            final IndyObjectMapper objectMapper = new IndyObjectMapper(false);
+            Response.ResponseBuilder builder = Response.ok(new DTOStreamingOutput(objectMapper, artifactStoreMap.get(key)),
+                    "application/json");
+            return builder.build();
+        }
+    }
+
+    @Override
     public Response createStore(String packageType, String type, String storeInJson)
     {
 

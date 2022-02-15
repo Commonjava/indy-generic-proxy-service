@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
 import org.commonjava.indy.model.core.*;
+import org.commonjava.indy.model.core.dto.StoreListingDTO;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.pkg.PackageTypeConstants;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
@@ -37,10 +38,6 @@ import java.io.*;
 import java.net.URL;
 
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
-import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
-import static org.commonjava.indy.service.httprox.model.TrackingType.ALWAYS;
-import static org.commonjava.indy.service.httprox.model.TrackingType.SUFFIX;
-import static org.commonjava.indy.service.httprox.util.ChannelUtils.DEFAULT_READ_BUF_SIZE;
 
 public class ProxyResponseHelper
 {
@@ -101,15 +98,19 @@ public class ProxyResponseHelper
         {
             String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
 
-            Group group = null;
-            //TODO check if the gorup exists
+            Group group;
+            Response response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
 
-            if ( group == null )
+            if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
             {
                 logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
                         url, trackingId );
                 ProxyCreationResult result = createRepo( trackingId, url, null );
                 group = result.getGroup();
+            }
+            else
+            {
+                group = (Group)response.readEntity(ArtifactStore.class);
             }
             return group;
         }
@@ -119,24 +120,28 @@ public class ProxyResponseHelper
             final String baseUrl = getBaseUrl( url, false );
             logger.info("baseUrl: {}", baseUrl);
 
-            /*ArtifactStoreQuery<RemoteRepository> query =
-                    storeManager.query().storeType( RemoteRepository.class );
+            Response response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
 
-            remote = query.getAllRemoteRepositories( GENERIC_PKG_KEY )
-                    .stream()
-                    .filter( store -> store.getUrl().equals( baseUrl )
-                            && store.getMetadata( TRACKING_ID ) == null )
-                    .findFirst()
-                    .orElse( null );*/
-
-            logger.debug( "Get httproxy remote, remote: {}", remote );
-            if ( remote == null )
+            logger.debug( "Get httproxy remote, result: {}", response.getStatus() );
+            if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
             {
                 logger.debug( "Creating remote repository for HTTProx request: {}", url );
                 String name = getRemoteRepositoryName( url );
                 logger.info("remote repo name: {} based on url: {}", name, url);
                 ProxyCreationResult result = createRepo( null, url, name );
                 remote = result.getRemote();
+            }
+            else
+            {
+                StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+                for( RemoteRepository remoteRepository : dto.getItems() )
+                {
+                    if ( remoteRepository.getMetadata( TRACKING_ID ) == null )
+                    {
+                        remote = remoteRepository;
+                        break;
+                    }
+                }
             }
             return remote;
         }
