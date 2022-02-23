@@ -15,6 +15,8 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
+import kotlin.Pair;
+import okhttp3.Headers;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
@@ -90,7 +92,7 @@ public class HttpConduitWrapper
         writeHeader("Connection", "close\r\n");
     }
 
-    public void writeExistingTransfer(InputStream txfr, boolean writeBody, MultivaluedMap<String, Object> headers )
+    public void writeExistingTransfer(InputStream txfr, boolean writeBody, Headers headers )
             throws IOException
     {
         Logger logger = LoggerFactory.getLogger( getClass() );
@@ -100,11 +102,11 @@ public class HttpConduitWrapper
 
             writeStatus( ApplicationStatus.OK );
 
-            headers.keySet().forEach( key -> {
-                logger.debug( "Setting response header: {} = {}", key, headers.get(key) );
+            headers.forEach( header -> {
+                logger.debug( "Setting response header: {} = {}", header.getFirst(), header.getSecond() );
                 try
                 {
-                    writeHeader(key, headers.get(key).toString());
+                    writeHeader(header.getFirst(), header.getSecond());
                 } catch (IOException e)
                 {
                     logger.error("Write header error: {}", e.getMessage(), e);

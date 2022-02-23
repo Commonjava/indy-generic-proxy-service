@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
+
 
 public final class HttpProxyConstants {
     public static final String PROXY_METRIC_LOGGER = "org.commonjava.topic.httprox.inbound";
@@ -41,6 +43,9 @@ public final class HttpProxyConstants {
     public static final String ALLOW_HEADER_VALUE = StringUtils.join(ALLOWED_METHODS, ",");
 
     public static final String PROXY_AUTHENTICATE_FORMAT = "Basic realm=\"%s\"";
+
+    public static final List<String> FORBIDDEN_HEADERS =
+            Arrays.asList( "content-length", "connection", "transfer-encoding" );
 
     private HttpProxyConstants() {
     }

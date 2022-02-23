@@ -101,7 +101,8 @@ public class MockableRepositoryService implements RepositoryService
     @Override
     public Response getRemoteByUrl(String packageType, String type, String url) {
         List<RemoteRepository> remotes = new ArrayList<>();
-
+        logger.info("getRemoteByUrl: {}", url);
+        //remotes.add(new RemoteRepository());
         UrlInfo temp = null;
         try
         {

@@ -44,17 +44,16 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
 
     @Inject
     @RestClient
-    ContentRetrievalService contentRetrievalService;
+    RepositoryService repositoryService;
 
     @Inject
-    @RestClient
-    RepositoryService repositoryService;
+    ContentRetrievalService contentRetrievalService;
 
     @Inject
     KeycloakProxyAuthenticator proxyAuthenticator;
 
     @Inject
-    private ProxyTransfersExecutor proxyExecutor;
+    ProxyTransfersExecutor proxyExecutor;
 
     public ProxyAcceptHandler() {
 
@@ -85,7 +84,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, contentRetrievalService, repositoryService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false) );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false) );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);

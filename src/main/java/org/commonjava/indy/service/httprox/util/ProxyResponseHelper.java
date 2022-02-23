@@ -16,6 +16,9 @@
 package org.commonjava.indy.service.httprox.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpMethod;
+import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
@@ -28,16 +31,17 @@ import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
-import org.commonjava.indy.service.httprox.handler.TransferStreamingOutput;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.IOException;
 import java.net.URL;
 
+import static io.vertx.core.http.HttpMethod.HEAD;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
+import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.FORBIDDEN_HEADERS;
 
 public class ProxyResponseHelper
 {
@@ -59,13 +63,13 @@ public class ProxyResponseHelper
 
     private IndyObjectMapper indyObjectMapper;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, ContentRetrievalService contentRetrievalService, RepositoryService repositoryService, IndyObjectMapper indyObjectMapper )
+    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, RepositoryService repositoryService, ContentRetrievalService contentRetrievalService, IndyObjectMapper indyObjectMapper )
     {
         this.httpRequest = httpRequest;
         this.config = config;
         this.repoCreator = repoCreator;
-        this.contentRetrievalService = contentRetrievalService;
         this.repositoryService = repositoryService;
+        this.contentRetrievalService = contentRetrievalService;
         this.indyObjectMapper = indyObjectMapper;
     }
 
@@ -123,6 +127,7 @@ public class ProxyResponseHelper
             Response response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
 
             logger.debug( "Get httproxy remote, result: {}", response.getStatus() );
+
             if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
             {
                 logger.debug( "Creating remote repository for HTTProx request: {}", url );
@@ -166,14 +171,15 @@ public class ProxyResponseHelper
         logger.debug( ">>>> Create repo: trackingId=" + trackingId + ", name=" + name );
         ProxyCreationResult result = repoCreator.create( trackingId, name, baseUrl, info, up,
                 LoggerFactory.getLogger( repoCreator.getClass() ) );
-        /*ChangeSummary changeSummary =
-                new ChangeSummary( ChangeSummary.SYSTEM_USER, "Creating HTTProx proxy for: " + info.getUrl() );*/
+
+        String changeLog = "Creating HTTProx proxy for: " + info.getUrl();
 
         RemoteRepository remote = result.getRemote();
         if ( remote != null )
         {
             try
             {
+                remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
             }
             catch (JsonProcessingException e)
@@ -188,6 +194,7 @@ public class ProxyResponseHelper
         {
             try
             {
+                hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
             }
             catch (JsonProcessingException e)
@@ -201,6 +208,7 @@ public class ProxyResponseHelper
         {
             try
             {
+                group.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", indyObjectMapper.writeValueAsString(group));
             }
             catch (JsonProcessingException e)
@@ -277,26 +285,51 @@ public class ProxyResponseHelper
             throw new IOException( "Sink channel already closed (or null)!" );
         }
 
-        Response response = contentRetrievalService.doGet(store.getType().name(), store.getName(), path);
+        try {
+            Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(store.getType().name(), store.getName(), path);
 
-        if ( response.getStatus() == HttpStatus.SC_OK)
-        {
-            TransferStreamingOutput responseStream = response.readEntity(TransferStreamingOutput.class);
-            logger.info("stream back: {}", path);
+            responseUni.subscribe().with(
+                    response ->
+                    {
+                        try
+                        {
+                            if ( response.code() == HttpStatus.SC_NOT_FOUND )
+                            {
+                                http.writeNotFoundTransfer(store, path);
+                            }
+                            else
+                            {
+                                http.writeExistingTransfer(response.body().byteStream(), writeBody, response.headers());
+                            }
+                            transferred = false;
+                        }
+                        catch (IOException e)
+                        {
+                            logger.error("write transfer error: {}", e.getMessage(), e);
+                        }
+                    },
+                    throwable ->
+                    {
+                        try
+                        {
+                            http.writeError(throwable);
+                            transferred = false;
+                        }
+                        catch (IOException e)
+                        {
+                            logger.error("write error: {}", e.getMessage(), e);
+                        }
+                    }
+            );
 
-            ByteArrayInputStream inputStream;
-
-            try ( ByteArrayOutputStream outputStream = new ByteArrayOutputStream() )
+            while ( transferred )
             {
-                responseStream.write( outputStream );
-                inputStream = new ByteArrayInputStream( outputStream.toByteArray() );
+                Thread.sleep(1000);
             }
-
-            http.writeExistingTransfer(inputStream, true, response.getHeaders());
         }
-        else if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
+        catch (Exception exception)
         {
-            http.writeNotFoundTransfer( store, path );
+            logger.error("doTransfer error: {}", exception.getMessage(), exception);
         }
 
     }
@@ -337,6 +370,20 @@ public class ProxyResponseHelper
             }
         }
         return tk;
+    }
+
+    /**
+     * Raw content-length/connection header breaks http2 protocol. Exclude them and let lower layer regenerate it.
+     * Allow all headers when it is HEAD request.
+     */
+    private boolean isHeaderAllowed(Pair<? extends String, ? extends String> header, HttpMethod method )
+    {
+        if ( method == HEAD )
+        {
+            return true;
+        }
+        String key = header.getFirst();
+        return !FORBIDDEN_HEADERS.contains( key.toLowerCase() );
     }
 
 }
