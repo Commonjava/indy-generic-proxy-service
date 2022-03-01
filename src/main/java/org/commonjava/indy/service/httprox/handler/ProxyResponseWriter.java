@@ -15,6 +15,7 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
+import io.opentelemetry.api.trace.Span;
 import org.apache.http.HttpRequest;
 import org.apache.http.RequestLine;
 import org.commonjava.cdi.util.weft.WeftExecutorService;
@@ -36,6 +37,7 @@ import org.xnio.conduits.ConduitStreamSourceChannel;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
+import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.service.httprox.util.ApplicationHeader.proxy_authenticate;
 import static org.commonjava.indy.service.httprox.util.ApplicationStatus.PROXY_AUTHENTICATION_REQUIRED;
 import static org.commonjava.indy.service.httprox.util.UserPass.parse;
@@ -72,11 +74,15 @@ public final class ProxyResponseWriter
     private KeycloakProxyAuthenticator proxyAuthenticator;
 
     private IndyObjectMapper indyObjectMapper;
+    private OtelAdapter otel;
+
+    private long startNanos;
 
     public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
                                final StreamConnection accepted, final RepositoryService repositoryService,
                                final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
-                               final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper )
+                               final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper,
+                               final long start, final OtelAdapter otel)
     {
         this.config = config;
         this.repoCreator = repoCreator;
@@ -87,6 +93,8 @@ public final class ProxyResponseWriter
         this.tunnelAndMITMExecutor = executor;
         this.proxyAuthenticator = proxyAuthenticator;
         this.indyObjectMapper = indyObjectMapper;
+        startNanos = start;
+        this.otel = otel;
     }
 
     public ProxyRequestReader getProxyRequestReader() {
@@ -109,6 +117,10 @@ public final class ProxyResponseWriter
         {
             return;
         }
+
+        ProxyMeter meter =
+                new ProxyMeter( httpRequest.getRequestLine().getMethod(), httpRequest.getRequestLine().toString(),
+                        startNanos, peerAddress, otel );
 
         HttpConduitWrapper http = new HttpConduitWrapper(sinkChannel, httpRequest);
         if (httpRequest == null) {
@@ -144,7 +156,7 @@ public final class ProxyResponseWriter
         if (error == null) {
 
             ProxyResponseHelper proxyResponseHelper =
-                    new ProxyResponseHelper( httpRequest, config, repoCreator, repositoryService, contentRetrievalService, indyObjectMapper );
+                    new ProxyResponseHelper( httpRequest, config, repoCreator, repositoryService, contentRetrievalService, indyObjectMapper, otel );
 
             try
             {
@@ -178,6 +190,10 @@ public final class ProxyResponseWriter
                         if ( trackingKey != null )
                         {
                             trackingId = trackingKey.getId();
+                            if ( otel.enabled() )
+                            {
+                                Span.current().setAttribute(TRACKING_ID, trackingId);
+                            }
                         }
 
                         String authCacheKey = generateAuthCacheKey( proxyUserPass );
@@ -210,7 +226,7 @@ public final class ProxyResponseWriter
                                 final URL url = new URL( requestLine.getUri() );
                                 logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
                                 ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
-                                proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass );
+                                proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass, meter );
                                 break;
                             }
                             case OPTIONS_METHOD:
@@ -244,7 +260,7 @@ public final class ProxyResponseWriter
 
                                 ProxyMITMSSLServer svr =
                                         new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
-                                                proxyResponseHelper, config );
+                                                proxyResponseHelper, config, meter );
                                 tunnelAndMITMExecutor.submit( svr );
                                 socketChannel = svr.getSocketChannel();
 

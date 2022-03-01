@@ -56,8 +56,10 @@ public class ProxyMITMSSLServer implements Runnable
 
     private volatile boolean isCancelled = false;
 
+    private ProxyMeter meter;
+
     public ProxyMITMSSLServer( String host, int port, String trackingId, UserPass proxyUserPass,
-                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config)
+                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter)
     {
         this.host = host;
         this.port = port;
@@ -65,6 +67,8 @@ public class ProxyMITMSSLServer implements Runnable
         this.proxyUserPass = proxyUserPass;
         this.proxyResponseHelper = proxyResponseHelper;
         this.config = config;
+        this.meter = meter;
+
     }
 
     @Override
@@ -138,6 +142,7 @@ public class ProxyMITMSSLServer implements Runnable
 
     private void execute() throws Exception
     {
+        ProxyMeter meter = null;
         SSLServerSocketFactory sslServerSocketFactory = getSSLServerSocketFactory( host );
 
         serverPort = findOpenPort( FIND_OPEN_PORT_MAX_RETRIES );
@@ -157,6 +162,8 @@ public class ProxyMITMSSLServer implements Runnable
                     long startNanos = System.nanoTime();
                     String method = null;
                     String requestLine = null;
+
+                    meter = meter.copy( startNanos, method, requestLine );
 
                     socket.setSoTimeout( (int) TimeUnit.MINUTES.toMillis( config.getMITMSoTimeoutMinutes() ) );
 
@@ -193,7 +200,7 @@ public class ProxyMITMSSLServer implements Runnable
                         {
                             try
                             {
-                                transferRemote( socket, host, port, method, path );
+                                transferRemote( socket, host, port, method, path, meter );
                             }
                             catch ( Exception e )
                             {
@@ -216,12 +223,16 @@ public class ProxyMITMSSLServer implements Runnable
         }
         finally
         {
+            if (meter != null)
+            {
+                meter.reportResponseSummary();
+            }
             isCancelled = false;
             started = false;
         }
     }
 
-    private void transferRemote( Socket socket, String host, int port, String method, String path ) throws Exception
+    private void transferRemote( Socket socket, String host, int port, String method, String path, ProxyMeter meter ) throws Exception
     {
         String protocol = "https";
         String auth = null;
@@ -236,7 +247,7 @@ public class ProxyMITMSSLServer implements Runnable
              HttpConduitWrapper http = new HttpConduitWrapper( new OutputStreamSinkChannel( out ), null ))
         {
             proxyResponseHelper.transfer( http, store, remoteUrl.getPath(), GET_METHOD.equals( method ),
-                    proxyUserPass );
+                    proxyUserPass, meter );
             out.flush();
         }
     }
