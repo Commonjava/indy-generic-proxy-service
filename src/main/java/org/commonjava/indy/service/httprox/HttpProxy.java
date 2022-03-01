@@ -41,10 +41,10 @@ public class HttpProxy {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Inject
-    private ProxyConfiguration config;
+    ProxyConfiguration config;
 
     @Inject
-    private ProxyAcceptHandler acceptHandler;
+    ProxyAcceptHandler acceptHandler;
 
     private AcceptingChannel<StreamConnection> server;
 

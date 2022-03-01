@@ -14,8 +14,8 @@ public class ProxyTransfersExecutor {
 
     @Inject
     @WeftManaged
-    @ExecutorConfig( named = "mitm-transfers", threads = 0, priority = 5, loadSensitive = FALSE )
-    private WeftExecutorService executor;
+    @ExecutorConfig( named = "mitm-transfers", threads = 20, priority = 5, loadSensitive = FALSE )
+    WeftExecutorService executor;
 
     protected ProxyTransfersExecutor()
     {

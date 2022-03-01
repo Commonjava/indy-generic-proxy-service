@@ -2,8 +2,9 @@ package org.commonjava.service.httprox.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.quarkus.test.junit.QuarkusTest;
-import org.commonjava.indy.model.core.HostedRepository;
-import org.commonjava.indy.model.core.PathStyle;
+import org.apache.http.util.EntityUtils;
+import org.commonjava.indy.model.core.*;
+import org.commonjava.indy.model.core.dto.StoreListingDTO;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.pkg.PackageTypeConstants;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
@@ -11,6 +12,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 
 @QuarkusTest
 public class RepositoryServiceTest
@@ -21,7 +23,7 @@ public class RepositoryServiceTest
     RepositoryService repositoryService;
 
     //@Test
-    public void testGetArtifactStore()
+    public void testArtifactStoreExists()
     {
         repositoryService.repoExists("maven", "hosted", "pnc-builds");
     }
@@ -37,10 +39,25 @@ public class RepositoryServiceTest
         repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", new IndyObjectMapper(false).writeValueAsString(hostedRepository));
     }
 
-    //@Test
+    @Test
     public void testGetRemoteByUrl()
     {
-        repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", "http://download.jboss.org:80/");
+        Response response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", "http://download.jboss.org:80/");
+        StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+        for( RemoteRepository remoteRepository : dto.getItems() )
+        {
+            System.out.println(remoteRepository.getName());
+        }
+    }
+
+    @Test
+    public void testGetArtifactStore()
+    {
+        Response response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", "g-fasterxml-github-com-build-35505");
+        System.out.println(response.getStatus());
+        ArtifactStore artifactStore = response.readEntity(ArtifactStore.class);
+        System.out.println(artifactStore.getName());
+
     }
 
 }

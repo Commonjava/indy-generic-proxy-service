@@ -34,10 +34,10 @@ public class KeycloakProxyAuthenticator
     private static final String TOKEN_HEADER = "TOKEN";
 
     @Inject
-    private ProxyConfiguration httproxConfig;
+    ProxyConfiguration httproxConfig;
 
     @Inject
-    private KeycloakConfig keycloakConfig;
+    KeycloakConfig keycloakConfig;
 
     private KeycloakDeployment deployment;
 

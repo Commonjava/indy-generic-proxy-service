@@ -1,7 +1,22 @@
+quarkus:
+  log:
+    level: INFO
+
 proxy:
   port: 8082
   realm: httprox
   secured: true
+
+service_proxy:
+  read-timeout: 30m
+  retry:
+    count: 3
+    interval: 3000
+  services:
+    - host: localhost
+      ssl: false
+      port: 8080
+      path-pattern: /api/.+
 
 ## [MITM]
 MITM:
@@ -19,10 +34,7 @@ tracking:
   type: SUFFIX
 
 ## [rest client]
-content-retrieval-service-api/mp-rest/uri: http://indy.url
-content-retrieval-service-api/mp-rest/scope: javax.inject.Singleton
-
-repo-service-api/mp-rest/uri: http://indy.url
+repo-service-api/mp-rest/uri: http://localhost:8080
 repo-service-api/mp-rest/scope: javax.inject.Singleton
 
 ## [auth]

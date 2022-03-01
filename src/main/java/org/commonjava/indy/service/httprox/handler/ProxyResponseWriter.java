@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.TimeUnit;
 
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.*;
 
@@ -61,8 +60,8 @@ public final class ProxyResponseWriter
     private ConduitStreamSourceChannel sourceChannel;
     private SocketAddress peerAddress;
 
-    private ContentRetrievalService contentRetrievalService;
     private RepositoryService repositoryService;
+    private ContentRetrievalService contentRetrievalService;
 
     private ProxySSLTunnel sslTunnel;
     private boolean directed = false;
@@ -75,16 +74,16 @@ public final class ProxyResponseWriter
     private IndyObjectMapper indyObjectMapper;
 
     public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
-                               final StreamConnection accepted, final ContentRetrievalService contentRetrievalService,
-                               final RepositoryService repositoryService, final WeftExecutorService executor,
+                               final StreamConnection accepted, final RepositoryService repositoryService,
+                               final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
                                final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper )
     {
         this.config = config;
         this.repoCreator = repoCreator;
         this.peerAddress = accepted.getPeerAddress();
         this.sourceChannel = accepted.getSourceChannel();
-        this.contentRetrievalService = contentRetrievalService;
         this.repositoryService = repositoryService;
+        this.contentRetrievalService = contentRetrievalService;
         this.tunnelAndMITMExecutor = executor;
         this.proxyAuthenticator = proxyAuthenticator;
         this.indyObjectMapper = indyObjectMapper;
@@ -145,7 +144,7 @@ public final class ProxyResponseWriter
         if (error == null) {
 
             ProxyResponseHelper proxyResponseHelper =
-                    new ProxyResponseHelper( httpRequest, config, repoCreator, contentRetrievalService, repositoryService, indyObjectMapper );
+                    new ProxyResponseHelper( httpRequest, config, repoCreator, repositoryService, contentRetrievalService, indyObjectMapper );
 
             try
             {
