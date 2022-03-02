@@ -18,11 +18,6 @@ public class ProxyHttpsWithTrackingIdTest extends AbstractGenericProxyTest
     String https_url =
             "https://oss.sonatype.org/content/repositories/releases/org/commonjava/indy/indy-api/1.3.1/indy-api-1.3.1.pom";
 
-    /*protected String getBaseHttproxConfig()
-    {
-        return DEFAULT_BASE_HTTPROX_CONFIG + "\nsecured=true";
-    }*/
-
     @Test
     public void run() throws Exception
     {
