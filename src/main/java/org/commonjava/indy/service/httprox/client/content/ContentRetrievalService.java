@@ -24,9 +24,6 @@ public class ContentRetrievalService
     @Inject
     OtelAdapter otel;
 
-    // Vert.x event types
-    public static final String EVENT_PROXY_CONFIG_CHANGE = "proxy-config-change";
-
     private static final String API_BASE_URL = "/api/content/generic-http/";
 
     @Inject
