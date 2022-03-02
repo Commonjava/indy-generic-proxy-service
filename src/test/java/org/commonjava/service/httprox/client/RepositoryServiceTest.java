@@ -39,7 +39,7 @@ public class RepositoryServiceTest
         repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", new IndyObjectMapper(false).writeValueAsString(hostedRepository));
     }
 
-    @Test
+    //@Test
     public void testGetRemoteByUrl()
     {
         Response response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", "http://download.jboss.org:80/");
@@ -50,7 +50,7 @@ public class RepositoryServiceTest
         }
     }
 
-    @Test
+    //@Test
     public void testGetArtifactStore()
     {
         Response response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", "g-fasterxml-github-com-build-35505");

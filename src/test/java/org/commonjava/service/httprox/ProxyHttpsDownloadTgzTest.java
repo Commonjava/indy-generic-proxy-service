@@ -2,11 +2,9 @@ package org.commonjava.service.httprox;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
@@ -34,8 +32,8 @@ public class ProxyHttpsDownloadTgzTest extends AbstractGenericProxyTest
     {
         File ret = getDownloadedFile( https_url, true, USER, PASS );
         assertTrue( ret != null && ret.exists() );
-        //System.out.println( "File size >>> " + ret.length() );
-        //assertEquals( ret.length(), 784846 ); // content-length: 784846
+        System.out.println( "File size >>> " + ret.length() );
+        assertEquals( ret.length(), 784846 ); // content-length: 784846
     }
 
     protected File getDownloadedFile( String url, boolean withCACert, String user, String pass ) throws Exception

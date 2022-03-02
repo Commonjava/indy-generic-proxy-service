@@ -1,6 +1,10 @@
 package org.commonjava.service.httprox;
 
+import io.quarkus.test.junit.QuarkusMock;
+import io.smallrye.mutiny.Uni;
+import okhttp3.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
@@ -17,16 +21,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
-import org.junit.jupiter.api.BeforeEach;
+import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
+import org.junit.jupiter.api.BeforeAll;
+import org.mockito.Mockito;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.KeyStore;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 
 public class AbstractGenericProxyTest
 {
@@ -35,14 +40,65 @@ public class AbstractGenericProxyTest
 
     private static int proxyPort = 8085;
 
-    protected File etcDir;
+    protected static File etcDir;
 
-    @BeforeEach
-    public void setup() throws Exception
+    @BeforeAll
+    public static void setup() throws Exception
     {
-        //TODO
+
+        ContentRetrievalService contentRetrievalService = Mockito.mock(ContentRetrievalService.class);
+
+        Mockito.when(contentRetrievalService.doGet(any(), any(), contains("indy-api-1.3.1.pom"))).thenReturn(Uni.createFrom().item(buildResponse("indy-api-1.3.1.pom")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), contains("fsevents-1.2.4.tgz"))).thenReturn(Uni.createFrom().item(buildResponse("fsevents-1.2.4.tgz")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), contains("simple.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple.pom")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), contains("simple-1.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple-1.pom")));
+
+        QuarkusMock.installMockForType(contentRetrievalService, ContentRetrievalService.class);
+
         etcDir = new File("/tmp");
         initTestData();
+    }
+
+    private static Response buildResponse(String fileName)
+    {
+
+        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(FilenameUtils.getName(fileName));
+
+        Response.Builder baseBuilder = new Response.Builder()
+                .request(new Request.Builder().url("http://url.com").build())
+                .protocol(Protocol.HTTP_1_1);
+
+        if ( in != null ) {
+            try {
+                return baseBuilder.code(200)
+                        .body(ResponseBody.create(toByteArray(in), MediaType.parse("application/json")))
+                        .message("Mock response from inputStream.").build();
+            }
+            catch (IOException e)
+            {
+                System.out.println("error>>:" + e.getMessage());
+            }
+        }
+        else
+        {
+            return baseBuilder.code(404).message("Mock 404 response.").build();
+        }
+
+        return null;
+    }
+
+    protected static byte[] toByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            byte[] b = new byte[2014*3];
+            int n = 0;
+            while ((n = is.read(b)) != -1) {
+                output.write(b, 0, n);
+            }
+            return output.toByteArray();
+        } finally {
+            output.close();
+        }
     }
 
     protected CloseableHttpClient proxiedHttp(final String user, final String pass )
@@ -140,14 +196,14 @@ public class AbstractGenericProxyTest
         return trustStore;
     }
 
-    protected void initTestData() throws IOException
+    protected static void initTestData() throws IOException
     {
         copyToConfigFile( "ssl/ca.der", "ssl/ca.der" );
         copyToConfigFile( "ssl/ca.crt", "ssl/ca.crt" );
         copyToConfigFile( "ssl/ca.jks", "ssl/ca.jks" );
     }
 
-    protected void copyToConfigFile( String resourcePath, String path ) throws IOException
+    protected static void copyToConfigFile( String resourcePath, String path ) throws IOException
     {
         File file = new File( etcDir, path );
         file.getParentFile().mkdirs();

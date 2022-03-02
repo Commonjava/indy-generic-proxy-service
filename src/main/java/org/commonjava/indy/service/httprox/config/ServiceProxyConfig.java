@@ -3,7 +3,6 @@ package org.commonjava.indy.service.httprox.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

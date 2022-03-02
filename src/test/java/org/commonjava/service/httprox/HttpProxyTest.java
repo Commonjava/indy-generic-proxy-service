@@ -28,7 +28,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @QuarkusTest
-public class HttpProxyTest
+public class HttpProxyTest extends AbstractGenericProxyTest
 {
 
     private static final String USER = "user";
@@ -43,7 +43,7 @@ public class HttpProxyTest
     @RestClient
     RepositoryService repositoryService;
 
-    @Test
+    //@Test
     public void proxySimplePomAndAutoCreateRemoteRepo()
             throws Exception
     {

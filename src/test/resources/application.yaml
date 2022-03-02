@@ -1,7 +1,7 @@
 proxy:
   port: 8085
   realm: httprox
-  secured: false
+  secured: true
 
 service_proxy:
   read-timeout: 30m
