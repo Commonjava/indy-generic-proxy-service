@@ -1,7 +1,10 @@
 package org.commonjava.service.httprox.client.mock;
 
 import io.quarkus.test.Mock;
-import org.commonjava.indy.model.core.*;
+import org.commonjava.indy.model.core.ArtifactStore;
+import org.commonjava.indy.model.core.RemoteRepository;
+import org.commonjava.indy.model.core.StoreKey;
+import org.commonjava.indy.model.core.StoreType;
 import org.commonjava.indy.model.core.dto.StoreListingDTO;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
@@ -10,7 +13,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -20,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Mock
 @RestClient
@@ -59,7 +60,7 @@ public class MockableRepositoryService implements RepositoryService
         {
             final IndyObjectMapper objectMapper = new IndyObjectMapper(false);
             Response.ResponseBuilder builder = Response.ok(new DTOStreamingOutput(objectMapper, artifactStoreMap.get(key)),
-                    "application/json");
+                    MediaType.APPLICATION_JSON);
             return builder.build();
         }
     }
@@ -85,7 +86,7 @@ public class MockableRepositoryService implements RepositoryService
         }
         if ( store != null )
         {
-            artifactStoreMap.put(store.getKey(), store);
+            //artifactStoreMap.put(store.getKey(), store);
         }
         URI location = UriBuilder.fromUri("mock_indy")
                 .path("/api/admin/stores")
@@ -94,7 +95,7 @@ public class MockableRepositoryService implements RepositoryService
                 .build(store.getName());
         Response.ResponseBuilder builder = Response.created( location )
                 .entity( new DTOStreamingOutput( objectMapper, store ) )
-                .type( "application/json" );
+                .type( MediaType.APPLICATION_JSON );
         return builder.build();
     }
 
@@ -102,7 +103,6 @@ public class MockableRepositoryService implements RepositoryService
     public Response getRemoteByUrl(String packageType, String type, String url) {
         List<RemoteRepository> remotes = new ArrayList<>();
         logger.info("getRemoteByUrl: {}", url);
-        //remotes.add(new RemoteRepository());
         UrlInfo temp = null;
         try
         {
@@ -148,8 +148,9 @@ public class MockableRepositoryService implements RepositoryService
         else
         {
             final StoreListingDTO<RemoteRepository> dto = new StoreListingDTO<>(remotes);
+            //TODO fix the response, which does not work as expected
             Response.ResponseBuilder builder = Response.ok( new DTOStreamingOutput( objectMapper, dto ),
-                    "application/json" );
+                    MediaType.APPLICATION_JSON );
             return builder.build();
         }
     }

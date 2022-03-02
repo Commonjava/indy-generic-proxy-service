@@ -1,6 +1,7 @@
 package org.commonjava.service.httprox;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,7 +16,7 @@ public class ProxyHttpsNotFoundTest extends AbstractGenericProxyTest
     String https_url =
             "https://oss.sonatype.org/content/repositories/releases/org/commonjava/indy/indy-api/no.pom";
 
-    //@Test
+    @Test
     public void run() throws Exception
     {
         String ret = get( https_url, true, USER, PASS );

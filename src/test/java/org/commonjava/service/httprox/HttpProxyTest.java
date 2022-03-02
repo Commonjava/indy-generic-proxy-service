@@ -43,7 +43,7 @@ public class HttpProxyTest extends AbstractGenericProxyTest
     @RestClient
     RepositoryService repositoryService;
 
-    //@Test
+    @Test
     public void proxySimplePomAndAutoCreateRemoteRepo()
             throws Exception
     {

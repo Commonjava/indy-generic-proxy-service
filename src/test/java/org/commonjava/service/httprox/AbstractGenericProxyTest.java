@@ -52,6 +52,7 @@ public class AbstractGenericProxyTest
         Mockito.when(contentRetrievalService.doGet(any(), any(), contains("fsevents-1.2.4.tgz"))).thenReturn(Uni.createFrom().item(buildResponse("fsevents-1.2.4.tgz")));
         Mockito.when(contentRetrievalService.doGet(any(), any(), contains("simple.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple.pom")));
         Mockito.when(contentRetrievalService.doGet(any(), any(), contains("simple-1.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple-1.pom")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), contains("no.pom"))).thenReturn(Uni.createFrom().item(buildResponse("no.pom")));
 
         QuarkusMock.installMockForType(contentRetrievalService, ContentRetrievalService.class);
 
