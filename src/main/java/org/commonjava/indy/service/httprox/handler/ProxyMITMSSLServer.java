@@ -56,7 +56,7 @@ public class ProxyMITMSSLServer implements Runnable
 
     private volatile boolean isCancelled = false;
 
-    private ProxyMeter meter;
+    private ProxyMeter meterTemplate;
 
     public ProxyMITMSSLServer( String host, int port, String trackingId, UserPass proxyUserPass,
                                ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter)
@@ -67,7 +67,7 @@ public class ProxyMITMSSLServer implements Runnable
         this.proxyUserPass = proxyUserPass;
         this.proxyResponseHelper = proxyResponseHelper;
         this.config = config;
-        this.meter = meter;
+        this.meterTemplate = meter;
 
     }
 
@@ -163,7 +163,7 @@ public class ProxyMITMSSLServer implements Runnable
                     String method = null;
                     String requestLine = null;
 
-                    meter = meter.copy( startNanos, method, requestLine );
+                    meter = meterTemplate.copy( startNanos, method, requestLine );
 
                     socket.setSoTimeout( (int) TimeUnit.MINUTES.toMillis( config.getMITMSoTimeoutMinutes() ) );
 
