@@ -16,6 +16,7 @@
 package org.commonjava.indy.service.httprox.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.opentelemetry.api.trace.Span;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import kotlin.Pair;
@@ -42,6 +43,10 @@ import java.net.URL;
 import static io.vertx.core.http.HttpMethod.HEAD;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.FORBIDDEN_HEADERS;
+import static org.commonjava.indy.service.httprox.util.MetricsConstants.PACKAGE_TYPE;
+import static org.commonjava.indy.service.httprox.util.MetricsConstants.CONTENT_ENTRY_POINT;
+import static org.commonjava.indy.service.httprox.util.MetricsConstants.PATH;
+import static org.commonjava.indy.service.httprox.util.MetricsConstants.METADATA_CONTENT;
 
 public class ProxyResponseHelper
 {
@@ -63,7 +68,9 @@ public class ProxyResponseHelper
 
     private IndyObjectMapper indyObjectMapper;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, RepositoryService repositoryService, ContentRetrievalService contentRetrievalService, IndyObjectMapper indyObjectMapper )
+    private OtelAdapter otel;
+
+    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, RepositoryService repositoryService, ContentRetrievalService contentRetrievalService, IndyObjectMapper indyObjectMapper, OtelAdapter otel )
     {
         this.httpRequest = httpRequest;
         this.config = config;
@@ -71,6 +78,7 @@ public class ProxyResponseHelper
         this.repositoryService = repositoryService;
         this.contentRetrievalService = contentRetrievalService;
         this.indyObjectMapper = indyObjectMapper;
+        this.otel = otel;
     }
 
     public ArtifactStore getArtifactStore(String trackingId, final URL url )
@@ -87,6 +95,21 @@ public class ProxyResponseHelper
             finally
             {
                 //timerContext.stop();
+            }
+        }
+
+        if ( otel.enabled() )
+        {
+            Span span = Span.current();
+            span.setAttribute("proxy.target.url", String.valueOf(url));
+            if ( trackingId != null )
+            {
+                span.setAttribute( TRACKING_ID, trackingId);
+            }
+            if ( store != null )
+            {
+                span.setAttribute( PACKAGE_TYPE, store.getKey().getPackageType());
+                span.setAttribute( CONTENT_ENTRY_POINT, store.getKey().toString());
             }
         }
 
@@ -256,22 +279,22 @@ public class ProxyResponseHelper
     }
 
     public void transfer( final HttpConduitWrapper http, final ArtifactStore store, final String path,
-                   final boolean writeBody, final UserPass proxyUserPass )
+                   final boolean writeBody, final UserPass proxyUserPass, final ProxyMeter meter )
                     throws IOException, IndyProxyException
     {
 
-        try
+        if ( otel.enabled() )
         {
-            doTransfer( http, store, path, writeBody, proxyUserPass );
+            Span.current().setAttribute( PATH, path );
+            Span.current().setAttribute( METADATA_CONTENT, Boolean.FALSE );
         }
-        finally
-        {
-            //timerContext.stop();
-        }
+
+        doTransfer( http, store, path, writeBody, proxyUserPass, meter );
+
     }
 
     private void doTransfer( final HttpConduitWrapper http, final ArtifactStore store, final String path,
-                             final boolean writeBody, final UserPass proxyUserPass )
+                             final boolean writeBody, final UserPass proxyUserPass, final ProxyMeter meter )
                     throws IOException, IndyProxyException
     {
         if ( transferred )
@@ -325,6 +348,11 @@ public class ProxyResponseHelper
             while ( transferred )
             {
                 Thread.sleep(1000);
+            }
+
+            if ( meter != null )
+            {
+                meter.reportResponseSummary();
             }
         }
         catch (Exception exception)
