@@ -26,12 +26,22 @@ public class ContentRetrievalService
 
     private static final String API_BASE_URL = "/api/content/generic-http/";
 
+    private static final String API_FOLO_BASE_URL = "/api/folo/track/";
+
     @Inject
     Classifier classifier;
 
-    public Uni<okhttp3.Response> doGet(String type, String name, String path ) throws Exception
+    public Uni<okhttp3.Response> doGet( String trackingId, String type, String name, String path ) throws Exception
     {
-        String path1 = UrlUtils.buildUrl(API_BASE_URL, type, name, path);
+        String path1;
+        if ( trackingId != null )
+        {
+            path1 = UrlUtils.buildUrl(API_FOLO_BASE_URL, trackingId, "generic-http", type, name, path);
+        }
+        else
+        {
+            path1 = UrlUtils.buildUrl(API_BASE_URL, type, name, path);
+        }
         logger.debug("doGet: {}", path1);
         return normalizePathAnd( path1, p -> classifier.classifyAnd( p, HttpMethod.GET, (client, service ) -> wrapAsyncCall(
                 client.get( p ).call(), HttpMethod.GET ) ) );
