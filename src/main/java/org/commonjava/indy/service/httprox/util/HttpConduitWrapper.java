@@ -15,24 +15,20 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
-import kotlin.Pair;
 import okhttp3.Headers;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
 import org.commonjava.indy.model.core.ArtifactStore;
-import org.commonjava.indy.model.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.channels.StreamSinkChannel;
 
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.commonjava.indy.service.httprox.util.ChannelUtils.*;
 

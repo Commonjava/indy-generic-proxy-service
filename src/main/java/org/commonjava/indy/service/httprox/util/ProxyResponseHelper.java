@@ -308,8 +308,21 @@ public class ProxyResponseHelper
             throw new IOException( "Sink channel already closed (or null)!" );
         }
 
+        String trackingId = null;
+        TrackingKey tk = getTrackingKey( proxyUserPass );
+
+        if ( tk != null )
+        {
+            logger.debug( "TRACKING {} in {} (KEY: {})", path, store, tk );
+            trackingId = tk.getId();
+        }
+        else
+        {
+            logger.debug( "NOT TRACKING: {} in {}", path, store );
+        }
+
         try {
-            Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(store.getType().name(), store.getName(), path);
+            Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(trackingId, store.getType().name(), store.getName(), path);
 
             responseUni.subscribe().with(
                     response ->

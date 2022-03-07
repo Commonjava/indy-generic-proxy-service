@@ -1,6 +1,19 @@
 quarkus:
   log:
     level: INFO
+  opentelemetry:
+    enabled: true
+    tracer:
+      exporter:
+        otlp:
+        # This is for sending to something like opentelemetry-collector
+        # endpoint: http://localhost:4317
+
+        # This is for sending to Honeycomb
+        # endpoint: "https://api.honeycomb.io:443"
+        #    headers:
+        #      - "X-honeycomb-team=<write-key>"
+        #      - "X-honeycomb-dataset=test"
 
 proxy:
   port: 8082
