@@ -1,13 +1,21 @@
 package org.commonjava.indy.service.httprox.util;
 
+import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.model.core.HostedRepository;
 import org.commonjava.indy.model.core.RemoteRepository;
 import org.commonjava.indy.service.httprox.handler.AbstractProxyRepositoryCreator;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.slf4j.Logger;
 
+import java.util.function.Predicate;
+
 public class RepoCreator extends AbstractProxyRepositoryCreator
 {
+
+    public Predicate<ArtifactStore> getNameFilter(String name )
+    {
+        return store -> store.getName().startsWith( name );
+    }
 
     @Override
     public ProxyCreationResult create(String trackingID, String name, String baseUrl, UrlInfo urlInfo, UserPass userPass, Logger logger) {

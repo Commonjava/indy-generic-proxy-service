@@ -39,9 +39,13 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static io.vertx.core.http.HttpMethod.HEAD;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
+import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.FORBIDDEN_HEADERS;
 import static org.commonjava.indy.service.httprox.util.MetricsConstants.PACKAGE_TYPE;
 import static org.commonjava.indy.service.httprox.util.MetricsConstants.CONTENT_ENTRY_POINT;
@@ -248,9 +252,32 @@ public class ProxyResponseHelper
      */
     private String getRemoteRepositoryName( URL url ) throws IndyProxyException
     {
+
         final String name = repoCreator.formatId( url.getHost(), getPort( url ), 0, null, StoreType.remote.name() );
-        //TODO
-        return name;
+
+        logger.debug( "Looking for remote repo starts with name: {}", name );
+
+        final String baseUrl = getBaseUrl( url, false );
+        Response response = repositoryService.getRemoteByUrl(GENERIC_PKG_KEY, "remote", baseUrl);
+
+        if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
+        {
+            return name;
+        }
+        else
+        {
+            StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+            Predicate<ArtifactStore> filter = ((RepoCreator)repoCreator).getNameFilter( name );
+            List<String> l = dto.getItems().stream()
+                                            .filter( filter )
+                                            .map( repository -> repository.getName() )
+                                            .collect( Collectors.toList() );
+            if ( l.isEmpty() )
+            {
+                return name;
+            }
+            return ((RepoCreator)repoCreator).getNextName( l );
+        }
     }
 
     private int getPort( URL url )
