@@ -175,13 +175,13 @@ public class ProxyResponseHelper
                     logger.info("remote repo name: {} based on url: {}", name, url);
                     ProxyCreationResult result = createRepo( null, url, name );
                     remote = result.getRemote();
+                    return remote;
                 }
                 else
                 {
                     throw new IndyProxyException("Get artifact store error.", e);
                 }
             }
-            logger.debug( "Get httproxy remote, result: {}", response.getStatus() );
 
             if ( response != null && response.getStatus() == HttpStatus.SC_OK )
             {
@@ -278,13 +278,22 @@ public class ProxyResponseHelper
         logger.debug( "Looking for remote repo starts with name: {}", name );
 
         final String baseUrl = getBaseUrl( url, false );
-        Response response = repositoryService.getRemoteByUrl(GENERIC_PKG_KEY, "remote", baseUrl);
 
-        if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
+        Response response = null;
+
+        try
         {
-            return name;
+            response = repositoryService.getRemoteByUrl(GENERIC_PKG_KEY, "remote", baseUrl);
         }
-        else
+        catch ( WebApplicationException e )
+        {
+            if ( e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+            {
+                return name;
+            }
+        }
+
+        if ( response != null && response.getStatus() == HttpStatus.SC_OK )
         {
             StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
             Predicate<ArtifactStore> filter = ((RepoCreator)repoCreator).getNameFilter( name );
@@ -297,6 +306,10 @@ public class ProxyResponseHelper
                 return name;
             }
             return ((RepoCreator)repoCreator).getNextName( l );
+        }
+        else
+        {
+            return name;
         }
     }
 
