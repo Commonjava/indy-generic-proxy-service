@@ -36,6 +36,7 @@ import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
@@ -129,17 +130,27 @@ public class ProxyResponseHelper
         {
             String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
 
-            Group group;
-            Response response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
-
-            if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
+            Group group = null;
+            Response response = null;
+            try
             {
-                logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
-                        url, trackingId );
-                ProxyCreationResult result = createRepo( trackingId, url, null );
-                group = result.getGroup();
+                response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
             }
-            else
+            catch ( WebApplicationException e )
+            {
+                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+                {
+                    logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
+                            url, trackingId );
+                    ProxyCreationResult result = createRepo( trackingId, url, null );
+                    group = result.getGroup();
+                }
+                else
+                {
+                    throw new IndyProxyException("Get artifact store error.", e);
+                }
+            }
+            if ( response != null && response.getStatus() == HttpStatus.SC_OK )
             {
                 group = (Group)response.readEntity(ArtifactStore.class);
             }
@@ -150,20 +161,29 @@ public class ProxyResponseHelper
             RemoteRepository remote = null;
             final String baseUrl = getBaseUrl( url, false );
             logger.info("baseUrl: {}", baseUrl);
-
-            Response response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
-
+            Response response = null;
+            try
+            {
+                response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
+            }
+            catch ( WebApplicationException e  )
+            {
+                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+                {
+                    logger.debug( "Creating remote repository for HTTProx request: {}", url );
+                    String name = getRemoteRepositoryName( url );
+                    logger.info("remote repo name: {} based on url: {}", name, url);
+                    ProxyCreationResult result = createRepo( null, url, name );
+                    remote = result.getRemote();
+                }
+                else
+                {
+                    throw new IndyProxyException("Get artifact store error.", e);
+                }
+            }
             logger.debug( "Get httproxy remote, result: {}", response.getStatus() );
 
-            if ( response.getStatus() == HttpStatus.SC_NOT_FOUND )
-            {
-                logger.debug( "Creating remote repository for HTTProx request: {}", url );
-                String name = getRemoteRepositoryName( url );
-                logger.info("remote repo name: {} based on url: {}", name, url);
-                ProxyCreationResult result = createRepo( null, url, name );
-                remote = result.getRemote();
-            }
-            else
+            if ( response != null && response.getStatus() == HttpStatus.SC_OK )
             {
                 StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
                 for( RemoteRepository remoteRepository : dto.getItems() )
