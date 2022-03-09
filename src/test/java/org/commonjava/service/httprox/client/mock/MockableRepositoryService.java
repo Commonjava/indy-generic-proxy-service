@@ -13,6 +13,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -54,7 +55,7 @@ public class MockableRepositoryService implements RepositoryService
         final StoreKey key = new StoreKey(packageType, st, name);
         if ( !artifactStoreMap.containsKey(key) )
         {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
         else
         {
@@ -143,7 +144,7 @@ public class MockableRepositoryService implements RepositoryService
 
         if (remotes == null || remotes.isEmpty())
         {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
         }
         else
         {

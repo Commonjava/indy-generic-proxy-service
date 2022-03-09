@@ -20,6 +20,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -92,7 +93,10 @@ public class HttpProxyTest extends AbstractGenericProxyTest
         try
         {
             response = client.execute( get, proxyContext( USER, PASS ) );
-            assertThat( response.getStatusLine().getStatusCode(), equalTo( HttpStatus.SC_NOT_FOUND ) );
+        }
+        catch ( WebApplicationException e )
+        {
+            assertThat( e.getResponse().getStatus(), equalTo( HttpStatus.SC_NOT_FOUND ) );
         }
         finally
         {
