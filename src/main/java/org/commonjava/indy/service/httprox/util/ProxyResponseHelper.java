@@ -229,9 +229,9 @@ public class ProxyResponseHelper
                 remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
             }
-            catch (JsonProcessingException e)
+            catch ( Exception e )
             {
-                throw new IndyProxyException("");
+                handleException(e);
             }
 
         }
@@ -244,9 +244,9 @@ public class ProxyResponseHelper
                 hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
             }
-            catch (JsonProcessingException e)
+            catch ( Exception e )
             {
-                throw new IndyProxyException("");
+                handleException(e);
             }
         }
 
@@ -258,13 +258,23 @@ public class ProxyResponseHelper
                 group.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
                 repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", indyObjectMapper.writeValueAsString(group));
             }
-            catch (JsonProcessingException e)
+            catch ( Exception e )
             {
-                throw new IndyProxyException("");
+                handleException(e);
             }
         }
 
         return result;
+    }
+
+    private void handleException(Exception e) throws IndyProxyException
+    {
+        if ( e instanceof WebApplicationException )
+        {
+            logger.error( "Create store error in repository service, status: {}, error: {}",
+                    ((WebApplicationException) e).getResponse().getStatus(), e.getMessage(), e );
+        }
+        throw new IndyProxyException("Create repository error.", e);
     }
 
     /**

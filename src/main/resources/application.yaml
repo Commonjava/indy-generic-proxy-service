@@ -1,6 +1,8 @@
 quarkus:
   log:
     level: INFO
+  http:
+    host-enabled: false
   opentelemetry:
     enabled: true
     tracer:
