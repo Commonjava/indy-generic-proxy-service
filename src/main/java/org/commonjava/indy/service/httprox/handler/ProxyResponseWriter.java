@@ -35,19 +35,18 @@ import org.xnio.StreamConnection;
 import org.xnio.conduits.ConduitStreamSinkChannel;
 import org.xnio.conduits.ConduitStreamSourceChannel;
 
-import static java.lang.Integer.parseInt;
-import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
-import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
-import static org.commonjava.indy.service.httprox.util.ApplicationHeader.proxy_authenticate;
-import static org.commonjava.indy.service.httprox.util.ApplicationStatus.PROXY_AUTHENTICATION_REQUIRED;
-import static org.commonjava.indy.service.httprox.util.UserPass.parse;
-
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.channels.SocketChannel;
 
+import static java.lang.Integer.parseInt;
+import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
+import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
+import static org.commonjava.indy.service.httprox.util.ApplicationHeader.proxy_authenticate;
+import static org.commonjava.indy.service.httprox.util.ApplicationStatus.PROXY_AUTHENTICATION_REQUIRED;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.*;
+import static org.commonjava.indy.service.httprox.util.UserPass.parse;
 
 public final class ProxyResponseWriter
         implements ChannelListener<ConduitStreamSinkChannel> {
@@ -61,6 +60,8 @@ public final class ProxyResponseWriter
 
     private ConduitStreamSourceChannel sourceChannel;
     private SocketAddress peerAddress;
+
+    private Tokens tokens;
 
     private RepositoryService repositoryService;
     private ContentRetrievalService contentRetrievalService;
@@ -82,7 +83,7 @@ public final class ProxyResponseWriter
                                final StreamConnection accepted, final RepositoryService repositoryService,
                                final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
                                final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper,
-                               final long start, final OtelAdapter otel)
+                               final Tokens tokens, final long start, final OtelAdapter otel)
     {
         this.config = config;
         this.repoCreator = repoCreator;
@@ -95,6 +96,7 @@ public final class ProxyResponseWriter
         this.indyObjectMapper = indyObjectMapper;
         startNanos = start;
         this.otel = otel;
+        this.tokens = tokens;
     }
 
     public ProxyRequestReader getProxyRequestReader() {
@@ -260,7 +262,7 @@ public final class ProxyResponseWriter
 
                                 ProxyMITMSSLServer svr =
                                         new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
-                                                proxyResponseHelper, config, meter );
+                                                proxyResponseHelper, config, tokens, meter );
                                 tunnelAndMITMExecutor.submit( svr );
                                 socketChannel = svr.getSocketChannel();
 
