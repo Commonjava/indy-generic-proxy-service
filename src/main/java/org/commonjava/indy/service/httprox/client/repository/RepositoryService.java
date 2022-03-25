@@ -1,5 +1,7 @@
 package org.commonjava.indy.service.httprox.client.repository;
 
+import org.commonjava.indy.service.httprox.util.CustomClientRequestFilter;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.*;
@@ -7,6 +9,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/api/admin/stores")
 @RegisterRestClient(configKey="repo-service-api")
+@RegisterProvider(CustomClientRequestFilter.class)
 public interface RepositoryService
 {
 

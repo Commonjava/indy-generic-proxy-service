@@ -37,10 +37,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 import static org.commonjava.indy.pkg.PackageTypeConstants.PKG_TYPE_GENERIC_HTTP;
-import static org.commonjava.indy.service.httprox.util.MetricsConstants.ACCESS_CHANNEL;
-import static org.commonjava.indy.service.httprox.util.MetricsConstants.PACKAGE_TYPE;
-import static org.commonjava.indy.service.httprox.util.MetricsConstants.REQUEST_PHASE;
-import static org.commonjava.indy.service.httprox.util.MetricsConstants.REQUEST_PHASE_START;
+import static org.commonjava.indy.service.httprox.util.MetricsConstants.*;
 
 @ApplicationScoped
 public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<StreamConnection>> {
@@ -65,6 +62,9 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
 
     @Inject
     OtelAdapter otel;
+
+    @Inject
+    Tokens tokens;
 
     public ProxyAcceptHandler() {
 
@@ -106,7 +106,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), tokens, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
