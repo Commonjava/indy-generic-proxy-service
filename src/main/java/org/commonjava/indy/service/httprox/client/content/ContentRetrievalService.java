@@ -33,6 +33,10 @@ public class ContentRetrievalService
 
     public Uni<okhttp3.Response> doGet( String trackingId, String type, String name, String path ) throws Exception
     {
+        if ( path.equals("/") )
+        {
+            path = path + "index.html";
+        }
         String path1;
         if ( trackingId != null )
         {
