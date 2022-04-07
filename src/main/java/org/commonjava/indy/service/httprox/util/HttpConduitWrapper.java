@@ -102,7 +102,15 @@ public class HttpConduitWrapper
                 logger.debug( "Setting response header: {} = {}", header.getFirst(), header.getSecond() );
                 try
                 {
-                    writeHeader(header.getFirst(), header.getSecond());
+                    if ( !(header.getFirst().equalsIgnoreCase( "TRANSFER-ENCODING" ) && header.getSecond().equals("chunked")) )
+                    {
+                        writeHeader(header.getFirst(), header.getSecond());
+                    }
+                    else
+                    {
+                        logger.debug("Ignore header {}", ApplicationHeader.transfer_encoding);
+                    }
+
                 } catch (IOException e)
                 {
                     logger.error("Write header error: {}", e.getMessage(), e);
