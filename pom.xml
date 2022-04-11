@@ -188,6 +188,11 @@
             <artifactId>infinispan-core</artifactId>
             <version>${infinispanVersion}</version>
         </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-commons-jdk11</artifactId>
+            <version>${infinispanVersion}</version>
+        </dependency>
 
     </dependencies>
 
