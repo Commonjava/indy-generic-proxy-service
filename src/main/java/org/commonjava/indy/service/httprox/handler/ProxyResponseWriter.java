@@ -75,6 +75,9 @@ public final class ProxyResponseWriter
     private KeycloakProxyAuthenticator proxyAuthenticator;
 
     private IndyObjectMapper indyObjectMapper;
+
+    private CacheProducer cacheProducer;
+
     private OtelAdapter otel;
 
     private long startNanos;
@@ -83,7 +86,7 @@ public final class ProxyResponseWriter
                                final StreamConnection accepted, final RepositoryService repositoryService,
                                final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
                                final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper,
-                               final Tokens tokens, final long start, final OtelAdapter otel)
+                               final Tokens tokens, final CacheProducer cacheProducer, final long start, final OtelAdapter otel)
     {
         this.config = config;
         this.repoCreator = repoCreator;
@@ -95,6 +98,7 @@ public final class ProxyResponseWriter
         this.proxyAuthenticator = proxyAuthenticator;
         this.indyObjectMapper = indyObjectMapper;
         startNanos = start;
+        this.cacheProducer = cacheProducer;
         this.otel = otel;
         this.tokens = tokens;
     }
@@ -158,7 +162,7 @@ public final class ProxyResponseWriter
         if (error == null) {
 
             ProxyResponseHelper proxyResponseHelper =
-                    new ProxyResponseHelper( httpRequest, config, repoCreator, repositoryService, contentRetrievalService, indyObjectMapper, otel );
+                    new ProxyResponseHelper( httpRequest, config, repoCreator, repositoryService, contentRetrievalService, indyObjectMapper, cacheProducer, otel );
 
             try
             {

@@ -21,6 +21,7 @@ import org.commonjava.indy.service.httprox.client.content.ContentRetrievalServic
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.keycloak.KeycloakProxyAuthenticator;
+import org.commonjava.indy.service.httprox.util.CacheProducer;
 import org.commonjava.indy.service.httprox.util.OtelAdapter;
 import org.commonjava.indy.service.httprox.util.RepoCreator;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -62,6 +63,9 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
 
     @Inject
     OtelAdapter otel;
+
+    @Inject
+    CacheProducer cacheProducer;
 
     @Inject
     Tokens tokens;
@@ -106,7 +110,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), tokens, start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), tokens, cacheProducer, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
