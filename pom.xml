@@ -39,6 +39,7 @@
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.version>2.3.0.Final</quarkus.platform.version>
         <quarkus.package.type>uber-jar</quarkus.package.type>
+        <infinispanVersion>12.1.11.Final</infinispanVersion>
     </properties>
 
     <dependencyManagement>
@@ -180,6 +181,12 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc-client-filter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+            <version>${infinispanVersion}</version>
         </dependency>
 
     </dependencies>

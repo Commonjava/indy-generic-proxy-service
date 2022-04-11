@@ -33,6 +33,7 @@ import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
+import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +42,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -75,7 +77,9 @@ public class ProxyResponseHelper
 
     private OtelAdapter otel;
 
-    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, RepositoryService repositoryService, ContentRetrievalService contentRetrievalService, IndyObjectMapper indyObjectMapper, OtelAdapter otel )
+    private CacheProducer cacheProducer;
+
+    public ProxyResponseHelper(HttpRequest httpRequest, ProxyConfiguration config, ProxyRepositoryCreator repoCreator, RepositoryService repositoryService, ContentRetrievalService contentRetrievalService, IndyObjectMapper indyObjectMapper, CacheProducer cacheProducer, OtelAdapter otel )
     {
         this.httpRequest = httpRequest;
         this.config = config;
@@ -83,6 +87,7 @@ public class ProxyResponseHelper
         this.repositoryService = repositoryService;
         this.contentRetrievalService = contentRetrievalService;
         this.indyObjectMapper = indyObjectMapper;
+        this.cacheProducer = cacheProducer;
         this.otel = otel;
     }
 
@@ -124,11 +129,19 @@ public class ProxyResponseHelper
     private ArtifactStore doGetArtifactStore(String trackingId, final URL url )
                     throws IndyProxyException
     {
+
+        Cache cache = cacheProducer.getCache("artifact_store");
+
         int port = getPort( url );
 
         if ( trackingId != null )
         {
             String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
+
+            if ( cache.get( groupName ) != null )
+            {
+                return (ArtifactStore) cache.get( groupName );
+            }
 
             Group group = null;
             Response response = null;
@@ -153,6 +166,7 @@ public class ProxyResponseHelper
             if ( response != null && response.getStatus() == HttpStatus.SC_OK )
             {
                 group = (Group)response.readEntity(ArtifactStore.class);
+                cache.put(groupName, group, 15, TimeUnit.MINUTES);
             }
             return group;
         }
