@@ -231,6 +231,7 @@ public final class ProxyResponseWriter
                             {
                                 final URL url = new URL( requestLine.getUri() );
                                 logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
+                                tokens.setToken( proxyUserPass.getPassword() );
                                 ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
                                 proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass, meter );
                                 break;
