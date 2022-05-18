@@ -16,6 +16,11 @@ quarkus:
         #    headers:
         #      - "X-honeycomb-team=<write-key>"
         #      - "X-honeycomb-dataset=test"
+  oidc-client:
+    auth-server-url: "keycloak_server_url/realms/pncredhat"
+    client-id: your_client_id
+    credentials:
+      secret: your_secret
 
 proxy:
   port: 8082
