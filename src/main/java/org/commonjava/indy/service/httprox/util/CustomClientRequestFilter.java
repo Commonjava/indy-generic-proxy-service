@@ -1,6 +1,7 @@
 package org.commonjava.indy.service.httprox.util;
 
 
+import io.quarkus.oidc.client.OidcClient;
 import org.commonjava.indy.service.httprox.handler.Tokens;
 
 import javax.annotation.Priority;
@@ -17,11 +18,11 @@ public class CustomClientRequestFilter implements ClientRequestFilter
 {
 
     @Inject
-    Tokens tokens;
+    OidcClient client;
 
     @Override
     public void filter( ClientRequestContext requestContext )
     {
-        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getToken());
+        requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + client.getTokens().await().indefinitely().getAccessToken());
     }
 }
