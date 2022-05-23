@@ -61,8 +61,6 @@ public final class ProxyResponseWriter
     private ConduitStreamSourceChannel sourceChannel;
     private SocketAddress peerAddress;
 
-    private Tokens tokens;
-
     private RepositoryService repositoryService;
     private ContentRetrievalService contentRetrievalService;
 
@@ -86,7 +84,7 @@ public final class ProxyResponseWriter
                                final StreamConnection accepted, final RepositoryService repositoryService,
                                final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
                                final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper,
-                               final Tokens tokens, final CacheProducer cacheProducer, final long start, final OtelAdapter otel)
+                               final CacheProducer cacheProducer, final long start, final OtelAdapter otel)
     {
         this.config = config;
         this.repoCreator = repoCreator;
@@ -100,7 +98,6 @@ public final class ProxyResponseWriter
         startNanos = start;
         this.cacheProducer = cacheProducer;
         this.otel = otel;
-        this.tokens = tokens;
     }
 
     public ProxyRequestReader getProxyRequestReader() {
@@ -231,7 +228,6 @@ public final class ProxyResponseWriter
                             {
                                 final URL url = new URL( requestLine.getUri() );
                                 logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
-                                tokens.setToken( proxyUserPass.getPassword() );
                                 ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
                                 proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass, meter );
                                 break;
@@ -267,7 +263,7 @@ public final class ProxyResponseWriter
 
                                 ProxyMITMSSLServer svr =
                                         new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
-                                                proxyResponseHelper, config, tokens, meter );
+                                                proxyResponseHelper, config, meter );
                                 tunnelAndMITMExecutor.submit( svr );
                                 socketChannel = svr.getSocketChannel();
 

@@ -67,9 +67,6 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     @Inject
     CacheProducer cacheProducer;
 
-    @Inject
-    Tokens tokens;
-
     public ProxyAcceptHandler() {
 
     }
@@ -110,7 +107,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), tokens, cacheProducer, start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), cacheProducer, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
