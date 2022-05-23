@@ -2,7 +2,6 @@ package org.commonjava.indy.service.httprox.util;
 
 
 import io.quarkus.oidc.client.OidcClient;
-import org.commonjava.indy.service.httprox.handler.Tokens;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;

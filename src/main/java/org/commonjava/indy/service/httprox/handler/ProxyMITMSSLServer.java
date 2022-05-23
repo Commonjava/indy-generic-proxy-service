@@ -58,10 +58,8 @@ public class ProxyMITMSSLServer implements Runnable
 
     private ProxyMeter meterTemplate;
 
-    private Tokens tokens;
-
     public ProxyMITMSSLServer( String host, int port, String trackingId, UserPass proxyUserPass,
-                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, Tokens tokens, ProxyMeter meter)
+                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter)
     {
         this.host = host;
         this.port = port;
@@ -69,7 +67,6 @@ public class ProxyMITMSSLServer implements Runnable
         this.proxyUserPass = proxyUserPass;
         this.proxyResponseHelper = proxyResponseHelper;
         this.config = config;
-        this.tokens = tokens;
         this.meterTemplate = meter;
 
     }
@@ -203,7 +200,6 @@ public class ProxyMITMSSLServer implements Runnable
                         {
                             try
                             {
-                                tokens.setToken( proxyUserPass.getPassword() );
                                 transferRemote( socket, host, port, method, path, meter );
                             }
                             catch ( Exception e )
