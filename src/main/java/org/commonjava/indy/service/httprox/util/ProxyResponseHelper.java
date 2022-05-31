@@ -397,7 +397,7 @@ public class ProxyResponseHelper
 
         if ( tk != null )
         {
-            logger.debug( "TRACKING {} in {} (KEY: {})", path, store, tk );
+            logger.info( "TRACKING {} in {} (KEY: {})", path, store, tk );
             trackingId = tk.getId();
         }
         else
