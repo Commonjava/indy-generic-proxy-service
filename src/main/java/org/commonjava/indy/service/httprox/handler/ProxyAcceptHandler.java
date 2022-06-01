@@ -33,6 +33,7 @@ import org.xnio.channels.AcceptingChannel;
 import org.xnio.conduits.ConduitStreamSinkChannel;
 import org.xnio.conduits.ConduitStreamSourceChannel;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
@@ -67,8 +68,16 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     @Inject
     CacheProducer cacheProducer;
 
+    IndyObjectMapper objectMapper;
+
     public ProxyAcceptHandler() {
 
+    }
+
+    @PostConstruct
+    public void post()
+    {
+        objectMapper = new IndyObjectMapper(false);
     }
 
     @Override
@@ -99,7 +108,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
             Span.current().setAttribute( REQUEST_PHASE, REQUEST_PHASE_START );
         }
 
-        logger.debug("accepted {}", accepted.getPeerAddress());
+        logger.info("accepted request from address: {}", accepted.getPeerAddress());
 
         final ConduitStreamSourceChannel source = accepted.getSourceChannel();
         final ConduitStreamSinkChannel sink = accepted.getSinkChannel();
@@ -107,7 +116,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator();
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, new IndyObjectMapper(false), cacheProducer, start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, objectMapper, cacheProducer, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
