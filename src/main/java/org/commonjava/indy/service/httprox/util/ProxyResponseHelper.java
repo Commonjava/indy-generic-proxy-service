@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -419,7 +420,17 @@ public class ProxyResponseHelper
                             }
                             else
                             {
-                                http.writeExistingTransfer(response.body().byteStream(), writeBody, response.headers());
+                                try ( InputStream bodyInputStream = response.body().byteStream() )
+                                {
+                                    http.writeExistingTransfer(bodyInputStream, writeBody, response.headers());
+                                }
+                                finally
+                                {
+                                    if ( response != null && response.body() != null )
+                                    {
+                                        response.body().close();
+                                    }
+                                }
                             }
                             transferred = false;
                         }
