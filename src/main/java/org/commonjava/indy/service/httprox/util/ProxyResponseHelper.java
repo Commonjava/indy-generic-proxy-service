@@ -455,7 +455,7 @@ public class ProxyResponseHelper
 
             while ( transferred )
             {
-                Thread.sleep(200);
+                TimeUnit.MILLISECONDS.sleep( 100 );
             }
 
             if ( meter != null )
