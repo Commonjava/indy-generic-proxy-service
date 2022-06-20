@@ -26,6 +26,11 @@ proxy:
   port: 8082
   realm: httprox
   secured: true
+  worker:
+    io:
+      threads: 10
+    task:
+      threads: 10
 
 service_proxy:
   read-timeout: 30m

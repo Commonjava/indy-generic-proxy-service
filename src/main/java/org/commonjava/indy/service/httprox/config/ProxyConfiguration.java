@@ -37,6 +37,10 @@ public class ProxyConfiguration
 
     private static final String DEFAULT_PROXY_REALM = "httprox";
 
+    private static final int DEFAULT_WORKER_IO_THREADS = 10;
+
+    private static final int DEFAULT_WORKER_TASK_THREADS = 10;
+
     @ConfigProperty(name = "proxy.port")
     Optional<Integer> port;
 
@@ -63,6 +67,12 @@ public class ProxyConfiguration
 
     @ConfigProperty( name="proxy.realm", defaultValue = DEFAULT_PROXY_REALM )
     public String proxyRealm;
+
+    @ConfigProperty(name="proxy.worker.io.threads")
+    public Integer ioThreads;
+
+    @ConfigProperty(name="proxy.worker.task.threads")
+    public Integer taskThreads;
 
     public Integer getPort() {
         return port.orElse(8081);
@@ -151,5 +161,21 @@ public class ProxyConfiguration
     public void setProxyRealm(String proxyRealm)
     {
         this.proxyRealm = proxyRealm;
+    }
+
+    public Integer getIoThreads() {
+        return ioThreads == null ? DEFAULT_WORKER_IO_THREADS : ioThreads;
+    }
+
+    public void setIoThreads(Integer ioThreads) {
+        this.ioThreads = ioThreads;
+    }
+
+    public Integer getTaskThreads() {
+        return taskThreads == null ? DEFAULT_WORKER_TASK_THREADS : taskThreads;
+    }
+
+    public void setTaskThreads(Integer taskThreads) {
+        this.taskThreads = taskThreads;
     }
 }
