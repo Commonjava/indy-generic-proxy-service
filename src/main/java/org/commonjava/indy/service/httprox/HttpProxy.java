@@ -23,10 +23,7 @@ import org.commonjava.indy.service.httprox.handler.ProxyAcceptHandler;
 import org.commonjava.propulsor.boot.PortFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnio.OptionMap;
-import org.xnio.StreamConnection;
-import org.xnio.Xnio;
-import org.xnio.XnioWorker;
+import org.xnio.*;
 import org.xnio.channels.AcceptingChannel;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -65,7 +62,10 @@ public class HttpProxy {
         XnioWorker worker;
         try {
             worker = Xnio.getInstance()
-                    .createWorker(OptionMap.EMPTY);
+                    .createWorker(OptionMap.builder()
+                            .set(Options.WORKER_IO_THREADS, config.getIoThreads())
+                            .set(Options.WORKER_TASK_CORE_THREADS, config.getTaskThreads())
+                            .getMap());
 
             final InetSocketAddress addr;
             if (config.getPort() < 1) {
