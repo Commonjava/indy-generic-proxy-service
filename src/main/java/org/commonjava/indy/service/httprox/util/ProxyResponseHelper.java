@@ -15,7 +15,6 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.api.trace.Span;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
@@ -127,7 +126,7 @@ public class ProxyResponseHelper
         return store;
     }
 
-    private ArtifactStore doGetArtifactStore(String trackingId, final URL url )
+    private synchronized ArtifactStore doGetArtifactStore(String trackingId, final URL url )
                     throws IndyProxyException
     {
 
