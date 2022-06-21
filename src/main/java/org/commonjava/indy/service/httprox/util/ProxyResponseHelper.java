@@ -126,90 +126,93 @@ public class ProxyResponseHelper
         return store;
     }
 
-    private synchronized ArtifactStore doGetArtifactStore(String trackingId, final URL url )
+    private ArtifactStore doGetArtifactStore(String trackingId, final URL url )
                     throws IndyProxyException
     {
 
-        Cache cache = cacheProducer.getCache("artifact_store");
-
-        int port = getPort( url );
-
-        if ( trackingId != null )
+        synchronized ( cacheProducer )
         {
-            String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
+            Cache cache = cacheProducer.getCache("artifact_store");
 
-            if ( cache.get( groupName ) != null )
-            {
-                return (ArtifactStore) cache.get( groupName );
-            }
+            int port = getPort( url );
 
-            Group group = null;
-            Response response = null;
-            try
+            if ( trackingId != null )
             {
-                response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
-            }
-            catch ( WebApplicationException e )
-            {
-                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
-                {
-                    logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
-                            url, trackingId );
-                    ProxyCreationResult result = createRepo( trackingId, url, null );
-                    group = result.getGroup();
-                }
-                else
-                {
-                    throw new IndyProxyException("Get artifact store error.", e);
-                }
-            }
-            if ( response != null && response.getStatus() == HttpStatus.SC_OK )
-            {
-                group = (Group)response.readEntity(ArtifactStore.class);
-                cache.put(groupName, group, 15, TimeUnit.MINUTES);
-            }
-            return group;
-        }
-        else
-        {
-            RemoteRepository remote = null;
-            final String baseUrl = getBaseUrl( url, false );
-            logger.info("baseUrl: {}", baseUrl);
-            Response response = null;
-            try
-            {
-                response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
-            }
-            catch ( WebApplicationException e  )
-            {
-                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
-                {
-                    logger.debug( "Creating remote repository for HTTProx request: {}", url );
-                    String name = getRemoteRepositoryName( url );
-                    logger.info("remote repo name: {} based on url: {}", name, url);
-                    ProxyCreationResult result = createRepo( null, url, name );
-                    remote = result.getRemote();
-                    return remote;
-                }
-                else
-                {
-                    throw new IndyProxyException("Get artifact store error.", e);
-                }
-            }
+                String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
 
-            if ( response != null && response.getStatus() == HttpStatus.SC_OK )
-            {
-                StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
-                for( RemoteRepository remoteRepository : dto.getItems() )
+                if ( cache.get( groupName ) != null )
                 {
-                    if ( remoteRepository.getMetadata( TRACKING_ID ) == null )
+                    return (ArtifactStore) cache.get( groupName );
+                }
+
+                Group group = null;
+                Response response = null;
+                try
+                {
+                    response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
+                }
+                catch ( WebApplicationException e )
+                {
+                    if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
                     {
-                        remote = remoteRepository;
-                        break;
+                        logger.debug( "Creating repositories (group, hosted, remote) for HTTProx request: {}, trackingId: {}",
+                                url, trackingId );
+                        ProxyCreationResult result = createRepo( trackingId, url, null );
+                        group = result.getGroup();
+                    }
+                    else
+                    {
+                        throw new IndyProxyException("Get artifact store error.", e);
                     }
                 }
+                if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                {
+                    group = (Group)response.readEntity(ArtifactStore.class);
+                    cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                }
+                return group;
             }
-            return remote;
+            else
+            {
+                RemoteRepository remote = null;
+                final String baseUrl = getBaseUrl( url, false );
+                logger.info("baseUrl: {}", baseUrl);
+                Response response = null;
+                try
+                {
+                    response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
+                }
+                catch ( WebApplicationException e  )
+                {
+                    if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+                    {
+                        logger.debug( "Creating remote repository for HTTProx request: {}", url );
+                        String name = getRemoteRepositoryName( url );
+                        logger.info("remote repo name: {} based on url: {}", name, url);
+                        ProxyCreationResult result = createRepo( null, url, name );
+                        remote = result.getRemote();
+                        return remote;
+                    }
+                    else
+                    {
+                        throw new IndyProxyException("Get artifact store error.", e);
+                    }
+                }
+
+                if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                {
+                    StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+                    for( RemoteRepository remoteRepository : dto.getItems() )
+                    {
+                        if ( remoteRepository.getMetadata( TRACKING_ID ) == null )
+                        {
+                            remote = remoteRepository;
+                            break;
+                        }
+                    }
+                }
+                return remote;
+            }
         }
     }
 
