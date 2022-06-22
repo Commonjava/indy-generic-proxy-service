@@ -159,6 +159,8 @@ public class ProxyResponseHelper
                                 url, trackingId );
                         ProxyCreationResult result = createRepo( trackingId, url, null );
                         group = result.getGroup();
+                        cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                        return group;
                     }
                     else
                     {
