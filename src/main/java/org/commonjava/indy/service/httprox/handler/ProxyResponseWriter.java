@@ -199,7 +199,7 @@ public final class ProxyResponseWriter
                             }
                         }
 
-                        String authCacheKey = generateAuthCacheKey( proxyUserPass );
+                        /* String authCacheKey = generateAuthCacheKey( proxyUserPass );
                         Boolean isAuthToken = false;//proxyAuthCache.get( authCacheKey );
                         if ( Boolean.TRUE.equals( isAuthToken ) )
                         {
@@ -211,12 +211,12 @@ public final class ProxyResponseWriter
                             logger.debug(
                                     "Passing BASIC authentication credentials to Keycloak bearer-token translation authenticator" );
                             authenticated = proxyAuthenticator.authenticate( proxyUserPass, http );
-                            /*if ( authenticated )
+                            *//*if ( authenticated )
                             {
                                 proxyAuthCache.put( authCacheKey, Boolean.TRUE, config.getAuthCacheExpirationHours(), TimeUnit.HOURS );
-                            }*/
+                            }*//*
                         }
-                        logger.debug( "Authentication done, result: {}", authenticated );
+                        logger.debug( "Authentication done, result: {}", authenticated );*/
 
                     }
 
