@@ -83,7 +83,7 @@ public class HttpConduitWrapper
         sinkChannel.write(b);
     }
 
-    private void writeClose()
+    public void writeClose()
             throws IOException {
         writeHeader("Connection", "close\r\n");
     }
