@@ -212,9 +212,9 @@ public class ProxyMITMSSLServer implements Runnable
                             logger.debug( "MITM server failed to get request from client" );
                         }
                     }
-                    catch ( SocketTimeoutException ste )
+                    catch ( Exception e )
                     {
-                        logger.error( "Socket read timeout with client hostname: {}, on port: {}.", host, port, ste );
+                        logger.error( "Exception failed with client hostname: {}, on port: {}.", host, port, e );
                         try (BufferedOutputStream out = new BufferedOutputStream( socket.getOutputStream() );
                              HttpConduitWrapper http = new HttpConduitWrapper( new OutputStreamSinkChannel( out ), null ))
                         {
