@@ -17,7 +17,7 @@ public class OtelAdapter
         rb.header( key, value );
     };
 
-    //@ConfigProperty( name = "quarkus.opentelemetry.enabled" )
+    @ConfigProperty( name = "quarkus.opentelemetry.enabled" )
     Boolean enabled;
 
     public boolean enabled()
