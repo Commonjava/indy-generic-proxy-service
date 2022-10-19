@@ -168,8 +168,10 @@ public class ProxyMITMSSLServer implements Runnable
                     socket.setSoTimeout( (int) TimeUnit.MINUTES.toMillis( config.getMITMSoTimeoutMinutes() ) );
 
                     logger.debug( "MITM server accepted" );
-                    try ( BufferedReader in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) ) )
+                    BufferedReader in = null;
+                    try
                     {
+                        in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
 
                         // TODO: Should we implement a while loop around this with some sort of read timeout, in case multiple requests are inlined?
                         // In principle, any sort of network communication is permitted over this port, but even if we restrict this to
@@ -215,12 +217,26 @@ public class ProxyMITMSSLServer implements Runnable
                     catch ( Exception e )
                     {
                         logger.error( "Exception failed with client hostname: {}, on port: {}.", host, port, e );
-                        try (BufferedOutputStream out = new BufferedOutputStream( socket.getOutputStream() );
-                             HttpConduitWrapper http = new HttpConduitWrapper( new OutputStreamSinkChannel( out ), null ))
+                        if ( !socket.isClosed() )
                         {
-                            http.writeClose();
-                            http.close();
-                            out.flush();
+                            try (BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
+                                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null)) {
+                                http.writeError(e);
+                                http.writeClose();
+                                http.close();
+                                out.flush();
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if ( in != null )
+                        {
+                            in.close();
+                            if ( !socket.isClosed() )
+                            {
+                                socket.close();
+                            }
                         }
                     }
                 }
