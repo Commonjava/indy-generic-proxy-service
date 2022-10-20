@@ -224,7 +224,6 @@ public class ProxyMITMSSLServer implements Runnable
                             {
                                 http.writeError(e);
                                 http.writeClose();
-                                out.flush();
                             }
                         }
                     }
