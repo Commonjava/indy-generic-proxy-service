@@ -35,6 +35,7 @@ import static org.commonjava.indy.service.httprox.util.ChannelUtils.*;
 public class HttpConduitWrapper
         implements org.commonjava.indy.service.httprox.util.HttpWrapper {
 
+    private final Logger logger = LoggerFactory.getLogger( getClass() );
     private final StreamSinkChannel sinkChannel;
 
     private final HttpRequest httpRequest;
@@ -50,7 +51,7 @@ public class HttpConduitWrapper
             throws IOException {
         final String message =
                 String.format("%s:\n  %s", e.getMessage(), StringUtils.join(e.getStackTrace(), "\n  "));
-
+        logger.warn( "Write errors: {}", message );
         sinkChannel.write(ByteBuffer.wrap(message.getBytes()));
     }
 

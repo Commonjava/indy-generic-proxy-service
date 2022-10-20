@@ -220,7 +220,8 @@ public class ProxyMITMSSLServer implements Runnable
                         if ( !socket.isClosed() )
                         {
                             try (BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
-                                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null)) {
+                                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null))
+                            {
                                 http.writeError(e);
                                 http.writeClose();
                                 http.close();
