@@ -26,7 +26,7 @@
     <name>Indy :: Service :: Generic Proxy</name>
     <properties>
         <apiVersion>1</apiVersion>
-        <xnioVersion>3.8.2.Final</xnioVersion>
+        <xnioVersion>3.8.8.Final</xnioVersion>
         <propulsorVersion>1.4</propulsorVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
