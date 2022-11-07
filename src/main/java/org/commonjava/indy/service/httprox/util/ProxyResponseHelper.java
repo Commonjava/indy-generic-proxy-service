@@ -440,6 +440,7 @@ public class ProxyResponseHelper
                         }
                         catch (IOException e)
                         {
+                            transferred = false;
                             logger.error("write transfer error: {}", e.getMessage(), e);
                         }
                     },
