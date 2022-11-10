@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.commonjava.indy.service</groupId>
     <artifactId>indy-generic-proxy-service</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Indy :: Service :: Generic Proxy</name>
     <properties>
         <apiVersion>1</apiVersion>
