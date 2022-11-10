@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.Span;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import kotlin.Pair;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
@@ -416,6 +417,7 @@ public class ProxyResponseHelper
             responseUni.subscribe().with(
                     response ->
                     {
+                        ResponseBody responseBody = response.body();
                         try
                         {
                             if ( response.code() == HttpStatus.SC_NOT_FOUND )
@@ -424,24 +426,23 @@ public class ProxyResponseHelper
                             }
                             else
                             {
-                                try ( InputStream bodyInputStream = response.body().byteStream() )
+                                try ( InputStream bodyInputStream = responseBody.byteStream() )
                                 {
                                     http.writeExistingTransfer(bodyInputStream, writeBody, response.headers());
                                 }
-                                finally
-                                {
-                                    if ( response != null && response.body() != null )
-                                    {
-                                        response.body().close();
-                                    }
-                                }
                             }
-                            transferred = false;
                         }
                         catch (IOException e)
                         {
-                            transferred = false;
                             logger.error("write transfer error: {}", e.getMessage(), e);
+                        }
+                        finally
+                        {
+                            transferred = false;
+                            if ( response != null && responseBody != null )
+                            {
+                                responseBody.close();
+                            }
                         }
                     },
                     throwable ->
@@ -449,12 +450,14 @@ public class ProxyResponseHelper
                         try
                         {
                             http.writeError(throwable);
-                            transferred = false;
                         }
                         catch (IOException e)
                         {
-                            transferred = false;
                             logger.error("write error: {}", e.getMessage(), e);
+                        }
+                        finally
+                        {
+                            transferred = false;
                         }
                     }
             );
