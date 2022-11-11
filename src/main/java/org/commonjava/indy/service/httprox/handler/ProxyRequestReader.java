@@ -72,6 +72,17 @@ public final class ProxyRequestReader
     public void handleEvent(final ConduitStreamSourceChannel sourceChannel) {
         boolean sendResponse = false;
         try {
+            if ( !sourceChannel.isOpen() )
+            {
+                return;
+            }
+
+            if ( !sourceChannel.isReadResumed() )
+            {
+                sourceChannel.getReadSetter().set(this);
+                sourceChannel.resumeReads();
+            }
+
             final int read = doRead(sourceChannel);
 
             if (read <= 0) {
