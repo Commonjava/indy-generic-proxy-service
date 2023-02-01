@@ -29,6 +29,14 @@
     <artifactId>indy-generic-proxy-service</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <name>Indy :: Service :: Generic Proxy</name>
+
+    <scm>
+        <connection>scm:git:https://github.com/commonjava/indy-generic-proxy-service</connection>
+        <developerConnection>scm:git:https://github.com/commonjava/indy-generic-proxy-service</developerConnection>
+        <url>http://github.com/Commonjava/indy-generic-proxy-service</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <apiVersion>1</apiVersion>
         <xnioVersion>3.8.8.Final</xnioVersion>
