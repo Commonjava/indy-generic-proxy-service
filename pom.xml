@@ -16,9 +16,7 @@
     limitations under the License.
 
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns="http://maven.apache.org/POM/4.0.0">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.commonjava</groupId>
         <artifactId>service-parent</artifactId>
@@ -27,14 +25,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.commonjava.indy.service</groupId>
     <artifactId>indy-generic-proxy-service</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <name>Indy :: Service :: Generic Proxy</name>
 
     <scm>
         <connection>scm:git:https://github.com/commonjava/indy-generic-proxy-service</connection>
         <developerConnection>scm:git:https://github.com/commonjava/indy-generic-proxy-service</developerConnection>
         <url>http://github.com/Commonjava/indy-generic-proxy-service</url>
-        <tag>HEAD</tag>
+        <tag>indy-generic-proxy-service-1.0.1</tag>
     </scm>
 
     <properties>
