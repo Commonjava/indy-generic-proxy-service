@@ -283,7 +283,7 @@ public final class ProxyResponseWriter
                                 // reader direct it to tunnel to MITM. MITM finish the handshake and read the request data,
                                 // retrieve remote content and send back to tunnel to client.
                                 http.writeStatus( ApplicationStatus.OK );
-                                http.writeHeader( "Status", "200 OK\n" );
+                                http.writeHeader( "Status", "200 OK\r\n" );
 
                                 break;
                             }
