@@ -232,7 +232,15 @@ public class ProxyMITMSSLServer implements Runnable
                     catch ( Exception e )
                     {
                         logger.error( "Exception failed with client hostname: {}, on port: {}.", host, port, e );
-                        throw e;
+                        if ( !socket.isClosed() )
+                        {
+                            try (BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
+                                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null))
+                            {
+                                http.writeError(e);
+                                http.writeClose();
+                            }
+                        }
                     }
                     finally
                     {
