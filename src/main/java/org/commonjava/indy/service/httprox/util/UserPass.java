@@ -39,7 +39,7 @@ public final class UserPass {
                     if (value.toUpperCase().startsWith("BASIC ")) {
                         final String[] authParts = value.split(" ");
                         userpass = new String(Base64.decodeBase64(authParts[1]));
-                        logger.info("userpass is: '{}'", userpass);
+                        logger.info( "Basic userpass is: '{}'", mask(userpass) );
                         break;
                     }
                 }
@@ -48,16 +48,24 @@ public final class UserPass {
 
         if (userpass != null) {
             final String[] upStr = userpass.split(":");
-            logger.info("Split userpass into:\n  {}", StringUtils.join(upStr, "\n  "));
-
             if (upStr.length < 1) {
                 return null;
             }
-
+            logger.debug( "Split user: {}, pass: ******", upStr[0] );
             return new UserPass(upStr[0], upStr.length > 1 ? upStr[1] : null);
         }
 
         return null;
+    }
+
+    private static String mask(String userpass)
+    {
+        int index = userpass.indexOf(":");
+        if ( index > 0 )
+        {
+            return userpass.substring( 0, index ) + ":******";
+        }
+        return "unknown";
     }
 
     public static UserPass parse(final String headerValue) {
