@@ -373,7 +373,7 @@ public class WebClientAdapter
                             scope.close();
                             span.end();
                         }
-                        logger.trace( "Failed: " + call.request().url(), e );
+                        logger.error( "Failed: " + call.request().url(), e );
                         p.fail( e );
                     }
 
@@ -391,7 +391,7 @@ public class WebClientAdapter
                             scope.close();
                             span.end();
                         }
-                        logger.trace( "Success: " + call.request().url() + " -> " + response.code() );
+                        logger.info( "Success: " + call.request().url() + " -> " + response.code() );
                         p.complete( response );
                     }
                 } );
