@@ -57,7 +57,7 @@ public class ContentRetrievalService
         {
             path1 = UrlUtils.buildUrl(API_BASE_URL, type, name, path);
         }
-        logger.debug("doGet: {}", path1);
+        logger.info("doGet: {}", path1);
         return normalizePathAnd( path1, p -> classifier.classifyAnd( p, HttpMethod.GET, (client, service ) -> wrapAsyncCall(
                 client.get( p ).call(), HttpMethod.GET ) ) );
     }
