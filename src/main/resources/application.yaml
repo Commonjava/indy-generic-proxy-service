@@ -1,6 +1,11 @@
 quarkus:
   log:
     level: INFO
+    category:
+      "org.commonjava.indy.service.httprox":
+        level: DEBUG
+      "org.commonjava.indy.model":
+        level: ERROR
   http:
     host-enabled: false
   opentelemetry:

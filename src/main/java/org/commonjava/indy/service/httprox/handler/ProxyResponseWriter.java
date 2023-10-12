@@ -227,9 +227,11 @@ public final class ProxyResponseWriter
                             case HEAD_METHOD:
                             {
                                 final URL url = new URL( requestLine.getUri() );
-                                logger.debug( "getArtifactStore starts, trackingId: {}, url: {}", trackingId, url );
+                                logger.debug( "Get artifact store, trackingId: {}, url: {}", trackingId, url );
                                 ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, url );
-                                proxyResponseHelper.transfer( http, store, url.getPath(), GET_METHOD.equals( method ), proxyUserPass, meter );
+                                // 'url.getFile()' gets the file name of this URL. The returned file portion will be the
+                                // same as getPath(), plus the concatenation of the value of getQuery(), if any.
+                                proxyResponseHelper.transfer( http, store, url.getFile(), GET_METHOD.equals( method ), proxyUserPass, meter );
                                 break;
                             }
                             case OPTIONS_METHOD:

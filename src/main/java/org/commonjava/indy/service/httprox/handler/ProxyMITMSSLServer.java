@@ -211,7 +211,7 @@ public class ProxyMITMSSLServer implements Runnable
                             }
                         }
 
-                        logger.debug( "Request:\n{}", sb.toString() );
+                        logger.debug( "Request:\n{}", sb );
 
                         if ( path != null )
                         {
@@ -268,21 +268,18 @@ public class ProxyMITMSSLServer implements Runnable
         }
     }
 
-    private void transferRemote( Socket socket, String host, int port, String method, String path, ProxyMeter meter ) throws Exception
+    private void transferRemote( Socket socket, String host, int port, String method, String file,
+                                 ProxyMeter meter ) throws Exception
     {
         String protocol = "https";
-        String auth = null;
-        String query = null;
-        String fragment = null;
-        URI uri = new URI( protocol, auth, host, port, path, query, fragment );
-        URL remoteUrl = uri.toURL();
-        logger.debug( "Requesting remote URL: {}", remoteUrl.toString() );
+        URL remoteUrl = new URL( protocol, host, port, file );
+        logger.debug( "Requesting remote URL: {}", remoteUrl );
 
         ArtifactStore store = proxyResponseHelper.getArtifactStore( trackingId, remoteUrl );
         try (BufferedOutputStream out = new BufferedOutputStream( socket.getOutputStream() );
              HttpConduitWrapper http = new HttpConduitWrapper( new OutputStreamSinkChannel( out ), null ))
         {
-            proxyResponseHelper.transfer( http, store, remoteUrl.getPath(), GET_METHOD.equals( method ),
+            proxyResponseHelper.transfer( http, store, remoteUrl.getFile(), GET_METHOD.equals( method ),
                     proxyUserPass, meter );
             out.flush();
         }

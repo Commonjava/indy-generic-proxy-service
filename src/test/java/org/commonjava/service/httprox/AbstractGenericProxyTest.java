@@ -41,12 +41,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.mockito.Mockito;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 
+import static org.commonjava.indy.service.httprox.util.UrlUtils.base64url;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.*;
 
 public class AbstractGenericProxyTest
 {
@@ -65,7 +66,8 @@ public class AbstractGenericProxyTest
 
         Mockito.when(contentRetrievalService.doGet(any(), any(), any(), contains("indy-api-1.3.1.pom"))).thenReturn(Uni.createFrom().item(buildResponse("indy-api-1.3.1.pom")));
         Mockito.when(contentRetrievalService.doGet(any(), any(), any(), contains("fsevents-1.2.4.tgz"))).thenReturn(Uni.createFrom().item(buildResponse("fsevents-1.2.4.tgz")));
-        Mockito.when(contentRetrievalService.doGet(any(), any(), any(), contains("simple.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple.pom")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), any(), eq("/test/org/test/simple/1/simple.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple.pom")));
+        Mockito.when(contentRetrievalService.doGet(any(), any(), any(), eq(base64url("/org/test/simple.pom?version=2.0")))).thenReturn(Uni.createFrom().item(buildResponse("simple-2.0.pom")));
         Mockito.when(contentRetrievalService.doGet(any(), any(), any(), contains("simple-1.pom"))).thenReturn(Uni.createFrom().item(buildResponse("simple-1.pom")));
         Mockito.when(contentRetrievalService.doGet(any(), any(), any(), contains("no.pom"))).thenReturn(Uni.createFrom().item(buildResponse("no.pom")));
 
@@ -225,6 +227,13 @@ public class AbstractGenericProxyTest
         file.getParentFile().mkdirs();
         FileUtils.copyInputStreamToFile(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream( resourcePath ), file );
+    }
+
+    protected String loadResource(String resource) throws IOException
+    {
+        final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream( resource );
+        assert stream != null;
+        return IOUtils.toString( stream, StandardCharsets.UTF_8);
     }
 
 }

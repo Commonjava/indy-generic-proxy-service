@@ -20,6 +20,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import kotlin.Pair;
 import okhttp3.ResponseBody;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
@@ -41,7 +42,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -55,6 +58,7 @@ import static org.commonjava.indy.service.httprox.util.MetricsConstants.PACKAGE_
 import static org.commonjava.indy.service.httprox.util.MetricsConstants.CONTENT_ENTRY_POINT;
 import static org.commonjava.indy.service.httprox.util.MetricsConstants.PATH;
 import static org.commonjava.indy.service.httprox.util.MetricsConstants.METADATA_CONTENT;
+import static org.commonjava.indy.service.httprox.util.UrlUtils.base64url;
 
 public class ProxyResponseHelper
 {
@@ -66,7 +70,7 @@ public class ProxyResponseHelper
 
     private final ProxyConfiguration config;
 
-    private boolean transferred;
+    private volatile boolean transferred;
 
     private ProxyRepositoryCreator repoCreator;
 
@@ -389,10 +393,10 @@ public class ProxyResponseHelper
     {
         if ( transferred )
         {
+            logger.info("Transfer already done, store: {}, path: {}", store.getKey(), path);
             return;
         }
 
-        transferred = true;
         if ( !http.isOpen() )
         {
             throw new IOException( "Sink channel already closed (or null)!" );
@@ -412,7 +416,10 @@ public class ProxyResponseHelper
         }
 
         try {
-            Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(trackingId, store.getType().name(), store.getName(), path);
+            String encodedPath = base64url(path);
+            logger.debug( "Get from content service, store: {}, path: {}", store.getKey(), encodedPath );
+            Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(trackingId, store.getType().name(),
+                    store.getName(), encodedPath);
 
             responseUni.subscribe().with(
                     response ->
@@ -438,7 +445,7 @@ public class ProxyResponseHelper
                         }
                         finally
                         {
-                            transferred = false;
+                            transferred = true;
                             if ( response != null && responseBody != null )
                             {
                                 responseBody.close();
@@ -457,15 +464,12 @@ public class ProxyResponseHelper
                         }
                         finally
                         {
-                            transferred = false;
+                            transferred = true;
                         }
                     }
             );
 
-            while ( transferred )
-            {
-                TimeUnit.MILLISECONDS.sleep( 100 );
-            }
+            responseUni.await().atMost(Duration.ofMinutes(5)); // Wait until the item or a failure is emitted
 
             if ( meter != null )
             {

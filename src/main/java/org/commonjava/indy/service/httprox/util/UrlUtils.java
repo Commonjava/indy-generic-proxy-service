@@ -15,9 +15,12 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -164,5 +167,17 @@ public final class UrlUtils
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Encode path using a URL-safe base64 algorithm if there are query parameters.
+     */
+    public static String base64url(String path) throws UnsupportedEncodingException
+    {
+        if (path.contains("?"))
+        {
+            return Base64.encodeBase64URLSafeString(path.getBytes(StandardCharsets.UTF_8));
+        }
+        return path;
     }
 }
