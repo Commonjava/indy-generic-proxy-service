@@ -28,11 +28,17 @@ import static org.commonjava.indy.model.core.ArtifactStore.METADATA_ORIGIN;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
 import static org.commonjava.indy.model.core.PathStyle.hashed;
+import static org.commonjava.indy.model.core.StoreType.group;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.PROXY_REPO_PREFIX;
+import static org.commonjava.indy.service.httprox.util.UrlUtils.hasQueryParam;
 
 public abstract class AbstractProxyRepositoryCreator
                 implements ProxyRepositoryCreator
 {
+    private static final String ATTR_PATH_ENCODE = "path-encode";
+
+    private static final String PATH_ENCODE_BASE64 = "base64";
+
     @Override
     public abstract ProxyCreationResult create(String trackingID, String name, String baseUrl, UrlInfo urlInfo,
                                                UserPass userPass, Logger logger );
@@ -115,6 +121,10 @@ public abstract class AbstractProxyRepositoryCreator
         if ( trackingID != null )
         {
             store.setMetadata( TRACKING_ID, trackingID );
+        }
+        if ( store.getType() != group && hasQueryParam(info.getUrl()) )
+        {
+            store.setMetadata( ATTR_PATH_ENCODE, PATH_ENCODE_BASE64 );
         }
     }
 

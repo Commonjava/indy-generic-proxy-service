@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -64,8 +63,6 @@ public class HttpProxyTest extends AbstractGenericProxyTest
     public void proxySimplePomAndAutoCreateRemoteRepo()
             throws Exception
     {
-        final String testRepo = "test";
-
         final String url = "http://remote.example:80/test/org/test/simple/1/simple.pom";
         final String testPomContents = loadResource("simple.pom");
 
@@ -87,12 +84,12 @@ public class HttpProxyTest extends AbstractGenericProxyTest
         {
             IOUtils.closeQuietly( stream );
         }
-
-        //TODO check if remote repo created
-        //repositoryService.repoExists("GENERIC_PKG_KEY", StoreType.remote.name(), "httprox_remote-example_80");
-
     }
 
+    /**
+     * If path contains '?', the proxy will create the remote repo with attribute 'path-encode':'base64'. When sending
+     * the request to remote site, the 'path+query' will be encoded.
+     */
     @Test
     public void proxySimplePomWithQueryParameter()
             throws Exception

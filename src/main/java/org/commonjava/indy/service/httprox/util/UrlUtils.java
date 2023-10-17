@@ -172,12 +172,17 @@ public final class UrlUtils
     /**
      * Encode path using a URL-safe base64 algorithm if there are query parameters.
      */
-    public static String base64url(String path) throws UnsupportedEncodingException
+    public static String base64url(String path)
     {
-        if (path.contains("?"))
+        if ( hasQueryParam(path) )
         {
             return Base64.encodeBase64URLSafeString(path.getBytes(StandardCharsets.UTF_8));
         }
         return path;
+    }
+
+    public static boolean hasQueryParam( String path )
+    {
+        return path.contains("?");
     }
 }
