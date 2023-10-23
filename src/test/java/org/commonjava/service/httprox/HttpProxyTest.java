@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
-import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -63,8 +63,6 @@ public class HttpProxyTest extends AbstractGenericProxyTest
     public void proxySimplePomAndAutoCreateRemoteRepo()
             throws Exception
     {
-        final String testRepo = "test";
-
         final String url = "http://remote.example:80/test/org/test/simple/1/simple.pom";
         final String testPomContents = loadResource("simple.pom");
 
@@ -86,10 +84,35 @@ public class HttpProxyTest extends AbstractGenericProxyTest
         {
             IOUtils.closeQuietly( stream );
         }
+    }
 
-        //TODO check if remote repo created
-        //repositoryService.repoExists("GENERIC_PKG_KEY", StoreType.remote.name(), "httprox_remote-example_80");
+    /**
+     * If path contains '?', the proxy will create the remote repo with attribute 'path-encode':'base64'. When sending
+     * the request to remote site, the 'path+query' will be encoded.
+     */
+    @Test
+    public void proxySimplePomWithQueryParameter()
+            throws Exception
+    {
+        final String url = "http://remote.example:80/org/test/simple.pom?version=2.0";
+        final String testPomContents = loadResource("simple-2.0.pom");
 
+        final HttpGet get = new HttpGet( url );
+        final CloseableHttpClient client = proxiedHttp();
+        InputStream stream = null;
+        try
+        {
+            CloseableHttpResponse response = client.execute( get, proxyContext( USER, PASS ) );
+            stream = response.getEntity().getContent();
+            final String resultingPom = IOUtils.toString( stream, StandardCharsets.UTF_8);
+
+            assertThat( resultingPom, notNullValue() );
+            assertThat( resultingPom, equalTo( testPomContents ) );
+        }
+        finally
+        {
+            IOUtils.closeQuietly( stream );
+        }
     }
 
     @Test
@@ -137,13 +160,5 @@ public class HttpProxyTest extends AbstractGenericProxyTest
         final HttpRoutePlanner planner = new DefaultProxyRoutePlanner( new HttpHost( HOST, proxyPort ) );
         return HttpClients.custom().setRoutePlanner( planner ).build();
     }
-
-    protected String loadResource(String resource) throws IOException
-    {
-        final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream( resource );
-
-        return IOUtils.toString( stream );
-    }
-
 
 }

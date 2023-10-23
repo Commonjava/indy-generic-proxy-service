@@ -19,7 +19,7 @@ pipeline {
                 expression { env.CHANGE_ID != null } // Pull request
             }
             steps {
-                sh '${M2_HOME}/bin/mvn -Dplugin.jacoco.skip=false -B -V clean verify sonar:sonar -Prun-its'
+                sh '${M2_HOME}/bin/mvn -Dplugin.jacoco.skip=false -B -V clean verify -Prun-its'
             }
         }
         stage('Load OCP Mappings') {
