@@ -30,7 +30,6 @@ import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERI
 import static org.commonjava.indy.model.core.PathStyle.hashed;
 import static org.commonjava.indy.model.core.StoreType.group;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.PROXY_REPO_PREFIX;
-import static org.commonjava.indy.service.httprox.util.UrlUtils.hasQueryParam;
 
 public abstract class AbstractProxyRepositoryCreator
                 implements ProxyRepositoryCreator
@@ -122,7 +121,7 @@ public abstract class AbstractProxyRepositoryCreator
         {
             store.setMetadata( TRACKING_ID, trackingID );
         }
-        if ( store.getType() != group && hasQueryParam(info.getUrl()) )
+        if ( store.getType() != group )
         {
             store.setMetadata( ATTR_PATH_ENCODE, PATH_ENCODE_BASE64 );
         }

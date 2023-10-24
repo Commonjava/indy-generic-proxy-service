@@ -174,15 +174,7 @@ public final class UrlUtils
      */
     public static String base64url(String path)
     {
-        if ( hasQueryParam(path) )
-        {
-            return Base64.encodeBase64URLSafeString(path.getBytes(StandardCharsets.UTF_8));
-        }
-        return path;
+        return Base64.encodeBase64URLSafeString(path.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static boolean hasQueryParam( String path )
-    {
-        return path.contains("?");
-    }
 }
