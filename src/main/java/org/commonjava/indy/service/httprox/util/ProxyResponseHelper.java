@@ -20,7 +20,6 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import kotlin.Pair;
 import okhttp3.ResponseBody;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
@@ -42,10 +41,9 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -421,6 +419,8 @@ public class ProxyResponseHelper
             Uni<okhttp3.Response> responseUni = contentRetrievalService.doGet(trackingId, store.getType().name(),
                     store.getName(), encodedPath);
 
+            final CountDownLatch transferLatch = new CountDownLatch(1);
+
             responseUni.subscribe().with(
                     response ->
                     {
@@ -445,11 +445,12 @@ public class ProxyResponseHelper
                         }
                         finally
                         {
-                            transferred = true;
                             if ( response != null && responseBody != null )
                             {
                                 responseBody.close();
                             }
+                            transferred = true;
+                            transferLatch.countDown();
                         }
                     },
                     throwable ->
@@ -465,11 +466,12 @@ public class ProxyResponseHelper
                         finally
                         {
                             transferred = true;
+                            transferLatch.countDown();
                         }
                     }
             );
 
-            responseUni.await().atMost(Duration.ofMinutes(5)); // Wait until the item or a failure is emitted
+            transferLatch.await( 5, TimeUnit.MINUTES ); // Wait until the item or a failure is emitted
 
             if ( meter != null )
             {
