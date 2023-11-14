@@ -41,7 +41,7 @@
         <propulsorVersion>1.4</propulsorVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
-        <indyVersion>2.6.4</indyVersion>
+        <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
         <bouncycastleVersion>1.64</bouncycastleVersion>
         <weftVersion>1.20</weftVersion>
@@ -138,9 +138,9 @@
             <artifactId>quarkus-vertx</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.commonjava.indy</groupId>
+            <groupId>org.commonjava.indy.service</groupId>
             <artifactId>indy-model-core-java</artifactId>
-            <version>${indyVersion}</version>
+            <version>${indyModelVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.commonjava.cdi.util</groupId>
