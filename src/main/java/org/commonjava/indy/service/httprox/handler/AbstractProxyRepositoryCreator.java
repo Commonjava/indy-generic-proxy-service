@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import static org.commonjava.indy.model.core.ArtifactStore.METADATA_ORIGIN;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.model.core.GenericPackageTypeDescriptor.GENERIC_PKG_KEY;
+import static org.commonjava.indy.model.core.PathStyle.base64url;
 import static org.commonjava.indy.model.core.PathStyle.hashed;
 import static org.commonjava.indy.model.core.StoreType.group;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.PROXY_REPO_PREFIX;
@@ -114,7 +115,7 @@ public abstract class AbstractProxyRepositoryCreator
     private void setPropsAndMetadata(ArtifactStore store, String trackingID, UrlInfo info )
     {
         store.setDescription( "HTTProx proxy based on: " + info.getUrl() );
-        store.setPathStyle( hashed );
+        store.setPathStyle( base64url );
 
         store.setMetadata( METADATA_ORIGIN, ProxyAcceptHandler.HTTPROX_ORIGIN );
         if ( trackingID != null )
