@@ -104,6 +104,11 @@ public class ProxyResponseHelper
             try
             {
                 store = doGetArtifactStore( trackingId, url );
+
+                if ( store != null )
+                {
+                    logger.info("Got the store {} with trackingId {} and url {}", store.getKey(), trackingId, url);
+                }
             }
             finally
             {
