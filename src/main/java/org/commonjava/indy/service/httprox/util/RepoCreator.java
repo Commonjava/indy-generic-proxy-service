@@ -17,7 +17,9 @@ package org.commonjava.indy.service.httprox.util;
 
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.model.core.HostedRepository;
+import org.commonjava.indy.model.core.PathStyle;
 import org.commonjava.indy.model.core.RemoteRepository;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.AbstractProxyRepositoryCreator;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.slf4j.Logger;
@@ -26,6 +28,11 @@ import java.util.function.Predicate;
 
 public class RepoCreator extends AbstractProxyRepositoryCreator
 {
+    private ProxyConfiguration config;
+    public RepoCreator( ProxyConfiguration config )
+    {
+        this.config = config;
+    }
 
     public Predicate<ArtifactStore> getNameFilter(String name )
     {
@@ -54,6 +61,12 @@ public class RepoCreator extends AbstractProxyRepositoryCreator
             ret.setGroup(createGroup(trackingID, groupName, urlInfo, logger, remote.getKey(), hosted.getKey()));
         }
         return ret;
+    }
+
+    @Override
+    protected PathStyle getPathStyle()
+    {
+        return PathStyle.valueOf( config.getStoragePathStyle() );
     }
 
 
