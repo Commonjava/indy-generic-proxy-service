@@ -1,4 +1,7 @@
 quarkus:
+  http:
+    port: 8080
+    read-timeout: 30s
   log:
     level: INFO
     category:
@@ -6,8 +9,6 @@ quarkus:
         level: DEBUG
       "org.commonjava.indy.model":
         level: ERROR
-  http:
-    host-enabled: false
   opentelemetry:
     enabled: true
     tracer:
