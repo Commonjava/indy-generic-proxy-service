@@ -113,7 +113,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         final ConduitStreamSourceChannel source = accepted.getSourceChannel();
         final ConduitStreamSinkChannel sink = accepted.getSinkChannel();
 
-        ProxyRepositoryCreator repoCreator = new RepoCreator();
+        ProxyRepositoryCreator repoCreator = new RepoCreator( config );
 
         final ProxyResponseWriter writer =
                 new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, objectMapper, cacheProducer, start, otel );

@@ -63,6 +63,11 @@ MITM:
 tracking:
   type: SUFFIX
 
+## [storage] - preferred is 'base64url' (for backward compatible, default is 'hashed'). User needs to update dep >= org.commonjava.indy.service:indy-model-core-java:1.5
+storage:
+  path:
+    style: hashed
+
 ## [rest client]
 repo-service-api/mp-rest/uri: http://localhost:8080
 repo-service-api/mp-rest/scope: javax.inject.Singleton
@@ -82,7 +87,3 @@ auth:
     resource: indy
   ui:
     resource: indy-ui
-
-
-
-

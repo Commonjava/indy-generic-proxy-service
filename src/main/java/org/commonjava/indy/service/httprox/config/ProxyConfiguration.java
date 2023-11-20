@@ -16,12 +16,11 @@
 package org.commonjava.indy.service.httprox.config;
 
 import io.quarkus.runtime.Startup;
+import org.commonjava.indy.model.core.PathStyle;
 import org.commonjava.indy.service.httprox.model.TrackingType;
-import org.commonjava.propulsor.config.annotation.ConfigName;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.Optional;
 
 @Startup
@@ -40,6 +39,8 @@ public class ProxyConfiguration
     private static final int DEFAULT_WORKER_IO_THREADS = 10;
 
     private static final int DEFAULT_WORKER_TASK_THREADS = 10;
+
+    private static final String DEFAULT_STORAGE_PATH_STYLE = PathStyle.hashed.name();
 
     @ConfigProperty(name = "proxy.port")
     Optional<Integer> port;
@@ -73,6 +74,9 @@ public class ProxyConfiguration
 
     @ConfigProperty(name="proxy.worker.task.threads")
     public Integer taskThreads;
+
+    @ConfigProperty(name="storage.path.style")
+    public String storagePathStyle;
 
     public Integer getPort() {
         return port.orElse(8081);
@@ -177,5 +181,15 @@ public class ProxyConfiguration
 
     public void setTaskThreads(Integer taskThreads) {
         this.taskThreads = taskThreads;
+    }
+
+    public String getStoragePathStyle()
+    {
+        return storagePathStyle == null ? DEFAULT_STORAGE_PATH_STYLE : storagePathStyle;
+    }
+
+    public void setStoragePathStyle(String storagePathStyle)
+    {
+        this.storagePathStyle = storagePathStyle;
     }
 }
