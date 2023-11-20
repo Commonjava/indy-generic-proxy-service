@@ -45,6 +45,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -138,16 +139,18 @@ public class ProxyResponseHelper
                     throws IndyProxyException
     {
 
-        synchronized ( cacheProducer )
+        int port = getPort( url );
+        String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
+
+        Lock lock = LockWrapper.getLockByKey( groupName );
+        lock.lock();
+
+        try
         {
             Cache cache = cacheProducer.getCache("artifact_store");
 
-            int port = getPort( url );
-
             if ( trackingId != null )
             {
-                String groupName = repoCreator.formatId( url.getHost(), port, 0, trackingId, "group" );
-
                 if ( cache.get( groupName ) != null )
                 {
                     return (ArtifactStore) cache.get( groupName );
@@ -224,6 +227,11 @@ public class ProxyResponseHelper
                 return remote;
             }
         }
+        finally
+        {
+            lock.unlock();
+        }
+
     }
 
     /**
