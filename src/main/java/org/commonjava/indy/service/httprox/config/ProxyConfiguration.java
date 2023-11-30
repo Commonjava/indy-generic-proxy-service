@@ -75,6 +75,9 @@ public class ProxyConfiguration
     @ConfigProperty(name="proxy.worker.task.threads")
     public Integer taskThreads;
 
+    @ConfigProperty(name="proxy.worker.connection.high-water")
+    public Integer highWater;
+
     @ConfigProperty(name="storage.path.style")
     public String storagePathStyle;
 
@@ -191,5 +194,14 @@ public class ProxyConfiguration
     public void setStoragePathStyle(String storagePathStyle)
     {
         this.storagePathStyle = storagePathStyle;
+    }
+
+
+    public Integer getHighWater() {
+        return highWater;
+    }
+
+    public void setHighWater(Integer highWater) {
+        this.highWater = highWater;
     }
 }

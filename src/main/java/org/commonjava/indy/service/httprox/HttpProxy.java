@@ -85,7 +85,7 @@ public class HttpProxy {
                 config.setPort(addr.getPort());
             } else {
                 addr = new InetSocketAddress(bind, config.getPort());
-                server = worker.createStreamConnectionServer(addr, acceptHandler, OptionMap.EMPTY);
+                server = worker.createStreamConnectionServer(addr, acceptHandler, config.getHighWater() == 0 ? OptionMap.EMPTY : OptionMap.builder().set(Options.CONNECTION_HIGH_WATER,  config.getHighWater()).getMap());
 
                 server.resumeAccepts();
             }

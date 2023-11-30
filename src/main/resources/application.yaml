@@ -37,6 +37,8 @@ proxy:
       threads: 10
     task:
       threads: 10
+  connection:
+    high-water: 50
 
 service_proxy:
   read-timeout: 30m
