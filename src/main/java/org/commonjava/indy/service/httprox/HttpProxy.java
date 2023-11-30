@@ -20,7 +20,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyAcceptHandler;
-import org.commonjava.propulsor.boot.PortFinder;
+import org.commonjava.indy.service.httprox.util.PortFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.*;

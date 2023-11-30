@@ -38,7 +38,6 @@
     <properties>
         <apiVersion>1</apiVersion>
         <xnioVersion>3.8.8.Final</xnioVersion>
-        <propulsorVersion>1.4</propulsorVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
@@ -98,11 +97,6 @@
             <groupId>org.jboss.xnio</groupId>
             <artifactId>xnio-nio</artifactId>
             <version>${xnioVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.commonjava.propulsor</groupId>
-            <artifactId>propulsor-core</artifactId>
-            <version>${propulsorVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
