@@ -38,14 +38,13 @@
     <properties>
         <apiVersion>1</apiVersion>
         <xnioVersion>3.8.8.Final</xnioVersion>
-        <propulsorVersion>1.4</propulsorVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
         <bouncycastleVersion>1.64</bouncycastleVersion>
-        <weftVersion>1.20</weftVersion>
-        <keycloakVersion>7.0.1</keycloakVersion>
+        <weftVersion>1.22</weftVersion>
+        <keycloakVersion>8.0.2</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
         <infinispanVersion>12.1.11.Final</infinispanVersion>
     </properties>
@@ -98,11 +97,6 @@
             <groupId>org.jboss.xnio</groupId>
             <artifactId>xnio-nio</artifactId>
             <version>${xnioVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.commonjava.propulsor</groupId>
-            <artifactId>propulsor-core</artifactId>
-            <version>${propulsorVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

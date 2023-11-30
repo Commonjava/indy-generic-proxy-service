@@ -15,6 +15,7 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
+import org.apache.commons.io.IOUtils;
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.util.*;
@@ -32,6 +33,7 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +43,7 @@ import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.HEAD;
 import static org.commonjava.indy.service.httprox.util.CertUtils.*;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.GET_METHOD;
-import static org.commonjava.propulsor.boot.PortFinder.findOpenPort;
+import static org.commonjava.indy.service.httprox.util.PortFinder.findOpenPort;
 
 public class ProxyMITMSSLServer implements Runnable
 {
