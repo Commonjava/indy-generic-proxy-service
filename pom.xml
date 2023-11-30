@@ -44,7 +44,7 @@
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
         <bouncycastleVersion>1.64</bouncycastleVersion>
         <weftVersion>1.22</weftVersion>
-        <keycloakVersion>8.0.2</keycloakVersion>
+        <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
         <infinispanVersion>12.1.11.Final</infinispanVersion>
     </properties>
