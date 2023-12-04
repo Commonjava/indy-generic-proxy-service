@@ -42,7 +42,6 @@
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
-        <bouncycastleVersion>1.64</bouncycastleVersion>
         <weftVersion>1.22</weftVersion>
         <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
