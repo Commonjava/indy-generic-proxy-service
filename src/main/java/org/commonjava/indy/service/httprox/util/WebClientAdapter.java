@@ -22,14 +22,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.vertx.UniHelper;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Interceptor;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import org.commonjava.indy.service.httprox.config.ServiceConfig;
 import org.commonjava.indy.service.httprox.config.ServiceProxyConfig;
@@ -42,7 +35,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.temporal.TemporalUnit;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static javax.ws.rs.core.HttpHeaders.HOST;
@@ -329,7 +324,6 @@ public class WebClientAdapter
             }
 
             return UniHelper.toUni( Future.future( ( p ) -> {
-                logger.info( "Starting upstream request..." );
 
                 Span span;
                 Scope scope;
@@ -350,6 +344,12 @@ public class WebClientAdapter
                 }
 
                 Call call = callClient.newCall( requestBuilder.build() );
+
+                final long nano = System.nanoTime();
+                final long mill = System.currentTimeMillis();
+                final String timestamp = mill + "." + nano;
+                final HttpUrl url = call.request().url();
+                logger.info( "Starting upstream request: {} ({})", url, timestamp );
 
                 if ( span != null )
                 {
@@ -373,7 +373,8 @@ public class WebClientAdapter
                             scope.close();
                             span.end();
                         }
-                        logger.error( "Failed: " + call.request().url(), e );
+                        logger.error( "Failed: {} ({}), latency: {}ms", url, timestamp,
+                                System.currentTimeMillis() - mill, e );
                         p.fail( e );
                     }
 
@@ -391,7 +392,8 @@ public class WebClientAdapter
                             scope.close();
                             span.end();
                         }
-                        logger.info( "Success: " + call.request().url() + " -> " + response.code() );
+                        logger.info( "Success: {} -> {} ({}), latency: {}ms", url, response.code(), timestamp,
+                                System.currentTimeMillis() - mill );
                         p.complete( response );
                     }
                 } );
