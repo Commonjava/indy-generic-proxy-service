@@ -18,7 +18,6 @@ package org.commonjava.indy.service.httprox.handler;
 import io.opentelemetry.api.trace.Span;
 import org.apache.http.HttpRequest;
 import org.apache.http.RequestLine;
-import org.commonjava.cdi.util.weft.WeftExecutorService;
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;

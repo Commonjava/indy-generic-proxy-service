@@ -15,20 +15,18 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
-import jakarta.inject.Named;
-import jakarta.ws.rs.Produces;
-import org.commonjava.cdi.util.weft.ExecutorConfig;
-import org.commonjava.cdi.util.weft.WeftExecutorService;
-import org.commonjava.cdi.util.weft.WeftManaged;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.ws.rs.Produces;
+import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.eclipse.microprofile.context.ManagedExecutor;
-
-import static org.commonjava.cdi.util.weft.ExecutorConfig.BooleanLiteral.FALSE;
 
 
 public class ProxyTransfersExecutor {
+
+    @Inject
+    ProxyConfiguration config;
 
     @Named("mitm-transfers")
     @ApplicationScoped
@@ -36,8 +34,9 @@ public class ProxyTransfersExecutor {
     public ManagedExecutor getExecutor()
     {
 
-        return ManagedExecutor.builder().maxAsync(100)
-            .maxQueued(200)
-            .build();
+        return ManagedExecutor.builder()
+                .maxAsync( config.getMitmMaxAsync() )
+                .maxQueued( config.getMitmMaxQueued() )
+                .build();
     }
 }

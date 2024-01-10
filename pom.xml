@@ -41,7 +41,6 @@
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
-        <weftVersion>1.22</weftVersion>
         <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
         <infinispanVersion>14.0.21.Final</infinispanVersion>
@@ -128,11 +127,6 @@
             <artifactId>indy-model-core-java</artifactId>
             <version>${indyModelVersion}</version>
         </dependency>
-        <dependency>
-            <groupId>org.commonjava.cdi.util</groupId>
-            <artifactId>weft</artifactId>
-            <version>${weftVersion}</version>
-        </dependency>
         
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -183,6 +177,10 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>23.6-jre</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
         </dependency>
     </dependencies>
 
