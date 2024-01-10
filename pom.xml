@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.commonjava</groupId>
         <artifactId>service-parent</artifactId>
-        <version>2</version>
+        <version>5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.commonjava.indy.service</groupId>
@@ -41,11 +41,10 @@
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>1.5-SNAPSHOT</indyModelVersion>
-        <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
         <weftVersion>1.22</weftVersion>
         <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
-        <infinispanVersion>12.1.11.Final</infinispanVersion>
+        <infinispanVersion>14.0.21.Final</infinispanVersion>
     </properties>
 
     <dependencyManagement>
@@ -172,12 +171,12 @@
 
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
+            <artifactId>infinispan-core-jakarta</artifactId>
             <version>${infinispanVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-commons</artifactId>
+            <artifactId>infinispan-commons-jakarta</artifactId>
             <version>${infinispanVersion}</version>
         </dependency>
         <dependency>
@@ -196,7 +195,7 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
             </plugin>
             <plugin>

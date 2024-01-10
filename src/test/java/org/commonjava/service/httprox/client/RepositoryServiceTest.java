@@ -26,8 +26,8 @@ import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 
 @QuarkusTest
 public class RepositoryServiceTest

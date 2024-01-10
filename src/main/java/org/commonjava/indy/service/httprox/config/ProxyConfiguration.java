@@ -20,7 +20,7 @@ import org.commonjava.indy.model.core.PathStyle;
 import org.commonjava.indy.service.httprox.model.TrackingType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Optional;
 
 @Startup

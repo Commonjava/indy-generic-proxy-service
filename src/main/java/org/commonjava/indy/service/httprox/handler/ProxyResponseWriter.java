@@ -28,6 +28,7 @@ import org.commonjava.indy.service.httprox.keycloak.KeycloakProxyAuthenticator;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
 import org.commonjava.indy.service.httprox.model.TrackingType;
 import org.commonjava.indy.service.httprox.util.*;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.ChannelListener;
@@ -68,7 +69,7 @@ public final class ProxyResponseWriter
     private boolean directed = false;
 
     private ProxyRequestReader proxyRequestReader;
-    private final WeftExecutorService tunnelAndMITMExecutor;
+    private final ManagedExecutor tunnelAndMITMExecutor;
 
     private KeycloakProxyAuthenticator proxyAuthenticator;
 
@@ -82,7 +83,7 @@ public final class ProxyResponseWriter
 
     public ProxyResponseWriter(final ProxyConfiguration config, final ProxyRepositoryCreator repoCreator,
                                final StreamConnection accepted, final RepositoryService repositoryService,
-                               final ContentRetrievalService contentRetrievalService, final WeftExecutorService executor,
+                               final ContentRetrievalService contentRetrievalService, final ManagedExecutor executor,
                                final KeycloakProxyAuthenticator proxyAuthenticator, final IndyObjectMapper indyObjectMapper,
                                final CacheProducer cacheProducer, final long start, final OtelAdapter otel)
     {
