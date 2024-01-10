@@ -16,6 +16,7 @@
 package org.commonjava.indy.service.httprox.handler;
 
 import io.opentelemetry.api.trace.Span;
+import jakarta.inject.Named;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
@@ -61,6 +62,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     KeycloakProxyAuthenticator proxyAuthenticator;
 
     @Inject
+    @Named("mitm-transfers")
     ManagedExecutor proxyExecutor;
 
     @Inject
