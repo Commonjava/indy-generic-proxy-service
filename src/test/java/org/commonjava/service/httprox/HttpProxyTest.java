@@ -34,8 +34,8 @@ import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 

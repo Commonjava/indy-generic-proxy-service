@@ -40,7 +40,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static javax.ws.rs.core.HttpHeaders.HOST;
+import static jakarta.ws.rs.core.HttpHeaders.HOST;
 
 public class WebClientAdapter
 {
