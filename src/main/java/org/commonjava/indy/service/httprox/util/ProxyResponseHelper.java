@@ -259,14 +259,29 @@ public class ProxyResponseHelper
         RemoteRepository remote = result.getRemote();
         if ( remote != null )
         {
+
             try
             {
-                remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
-                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
+                repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", remote.getName());
             }
-            catch ( Exception e )
+            catch ( WebApplicationException e )
             {
-                handleException(e);
+                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+                {
+                    try
+                    {
+                        remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
+                        repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
+                    }
+                    catch ( Exception se )
+                    {
+                        handleException( se );
+                    }
+                }
+                else
+                {
+                    handleException( e );
+                }
             }
 
         }
@@ -276,13 +291,28 @@ public class ProxyResponseHelper
         {
             try
             {
-                hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
-                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
+                repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", hosted.getName());
             }
-            catch ( Exception e )
+            catch ( WebApplicationException e )
             {
-                handleException(e);
+                if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
+                {
+                    try
+                    {
+                        hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
+                        repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
+                    }
+                    catch ( Exception se )
+                    {
+                        handleException( se );
+                    }
+                }
+                else
+                {
+                    handleException( e );
+                }
             }
+
         }
 
         Group group = result.getGroup();
@@ -416,7 +446,7 @@ public class ProxyResponseHelper
         String trackingId = null;
         TrackingKey tk = getTrackingKey( proxyUserPass );
 
-        if ( tk != null )
+        if ( tk != null && tk.getId().endsWith( TRACKED_USER_SUFFIX ) )
         {
             logger.info( "TRACKING {} in {} (KEY: {})", path, store, tk );
             trackingId = tk.getId();
@@ -521,9 +551,16 @@ public class ProxyResponseHelper
                 {
                     final String user = proxyUserPass.getUser();
 
-                    if ( user != null && user.endsWith( TRACKED_USER_SUFFIX ) && user.length() > TRACKED_USER_SUFFIX.length() )
+                    if ( user != null )
                     {
-                        tk = new TrackingKey( StringUtils.substring( user, 0, - TRACKED_USER_SUFFIX.length() ) );
+                        if ( user.endsWith( TRACKED_USER_SUFFIX ) && user.length() > TRACKED_USER_SUFFIX.length() )
+                        {
+                            tk = new TrackingKey(StringUtils.substring(user, 0, -TRACKED_USER_SUFFIX.length()));
+                        }
+                        else
+                        {
+                            tk = new TrackingKey(user);
+                        }
                     }
                 }
 
