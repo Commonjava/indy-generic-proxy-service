@@ -58,7 +58,7 @@ public class RepoCreator extends AbstractProxyRepositoryCreator
             ret.setHosted(hosted);
 
             String groupName = formatId(host, port, 0, trackingID, "group");
-            ret.setGroup(createGroup(trackingID, groupName, urlInfo, logger, remote.getKey(), hosted.getKey()));
+            ret.setGroup(createGroup(trackingID, groupName, urlInfo, logger, hosted.getKey(), remote.getKey()));
         }
         return ret;
     }
