@@ -111,9 +111,20 @@ public class ProxySSLTunnel implements Runnable
             //byteBuffer.get( bytes );
 
             logger.debug( "Write to sink channel, size: {}", byteBuffer.limit() );
-            ChannelUtils.write( sinkChannel, byteBuffer );
-            sinkChannel.flush();
-            byteBuffer.clear();
+            try
+            {
+                ChannelUtils.write( sinkChannel, byteBuffer );
+            }
+            catch ( IOException e )
+            {
+                logger.debug( "Write to sink channel breaks, {}", e.toString() );
+                break;
+            }
+            finally
+            {
+                sinkChannel.flush();
+                byteBuffer.clear();
+            }
 
             total += read;
         }

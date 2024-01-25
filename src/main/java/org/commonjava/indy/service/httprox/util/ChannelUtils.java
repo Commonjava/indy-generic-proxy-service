@@ -28,6 +28,8 @@ public class ChannelUtils {
     private static final Logger logger = LoggerFactory.getLogger(ChannelUtils.class);
     private static final int MAX_FLUSH_RETRY_COUNT = 3;
 
+    private static final int MAX_WRITE_RETRY_COUNT = 10;
+
     public static void flush(StreamSinkChannel channel) throws IOException {
         int retry = 0;
         boolean flushed = false;
@@ -45,15 +47,27 @@ public class ChannelUtils {
     }
 
     public static void write(WritableByteChannel channel, ByteBuffer bbuf) throws IOException {
-        int written = 0;
-        int size = bbuf.limit();
-        do {
-            written += channel.write(bbuf);
-            if (written < size) {
+        int retry = 0;
+        while ( bbuf.hasRemaining() && retry < MAX_WRITE_RETRY_COUNT )
+        {
+            int written = channel.write( bbuf );
+
+            if ( written == 0 )
+            {
+                // The channel is non-blocking and couldn't write anything at the moment.
                 wait(100);
+                retry++;
+            }
+            else
+            {
+                retry = 0; // Reset retry if some data was successfully written
             }
         }
-        while (written < size);
+
+        if ( retry >= MAX_WRITE_RETRY_COUNT )
+        {
+            throw new IOException( "Exceeded maximum write retry." );
+        }
     }
 
     private static void wait(int milliseconds) {
