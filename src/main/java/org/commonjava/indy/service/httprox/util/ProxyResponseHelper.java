@@ -446,7 +446,9 @@ public class ProxyResponseHelper
         String trackingId = null;
         TrackingKey tk = getTrackingKey( proxyUserPass );
 
-        if ( tk != null && tk.getId().endsWith( TRACKED_USER_SUFFIX ) )
+        Boolean isTracking = proxyUserPass != null && proxyUserPass.getUser() != null && proxyUserPass.getUser().endsWith( TRACKED_USER_SUFFIX );
+
+        if ( tk != null && isTracking )
         {
             logger.info( "TRACKING {} in {} (KEY: {})", path, store, tk );
             trackingId = tk.getId();
