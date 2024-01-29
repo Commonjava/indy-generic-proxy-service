@@ -141,9 +141,12 @@ public final class ProxyRequestReader
         logger.debug( "Starting read: {}", channel );
 
         int total = 0;
+        ByteBuffer buf = ByteBuffer.allocate( 1024 );
+
         while ( true )
         {
-            ByteBuffer buf = ByteBuffer.allocate( 1024 );
+            buf.clear();
+
             channel.awaitReadable( AWAIT_READABLE_IN_MILLISECONDS, TimeUnit.MILLISECONDS );
 
             int read = channel.read( buf ); // return the number of bytes read, possibly zero, or -1
@@ -203,6 +206,12 @@ public final class ProxyRequestReader
                             {
                                 lastFour.remove( lastFour.size() - 1 );
                             }
+                            break;
+                        }
+                        case '\r':
+                        {
+                            // Skip '\r' characters
+                            break;
                         }
                         default:
                         {
