@@ -278,18 +278,18 @@ public class ProxyResponseHelper
         if ( remote != null )
         {
 
-            try
+            try ( Response resp = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", remote.getName()) )
             {
-                repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", remote.getName());
+                logger.debug( "Remote repository {} is already existing.", remote.getName() );
             }
             catch ( WebApplicationException e )
             {
                 if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
                 {
-                    try
+                    remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
+                    try ( Response resp = repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote)) )
                     {
-                        remote.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
-                        repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", indyObjectMapper.writeValueAsString(remote));
+                        logger.debug( "Remote repository {} created.", remote.getName() );
                     }
                     catch ( Exception se )
                     {
@@ -307,18 +307,18 @@ public class ProxyResponseHelper
         HostedRepository hosted = result.getHosted();
         if ( hosted != null )
         {
-            try
+            try ( Response resp = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", hosted.getName()) )
             {
-                repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", hosted.getName());
+                logger.debug( "Hosted repository {} is already existing.", hosted.getName() );
             }
             catch ( WebApplicationException e )
             {
                 if (e.getResponse().getStatus() == HttpStatus.SC_NOT_FOUND )
                 {
-                    try
+                    hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
+                    try ( Response resp = repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted)) )
                     {
-                        hosted.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
-                        repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "hosted", indyObjectMapper.writeValueAsString(hosted));
+                        logger.debug( "Hosted repository {} created.", remote.getName() );
                     }
                     catch ( Exception se )
                     {
@@ -336,10 +336,10 @@ public class ProxyResponseHelper
         Group group = result.getGroup();
         if ( group != null )
         {
-            try
+            group.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
+            try ( Response resp = repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", indyObjectMapper.writeValueAsString(group)) )
             {
-                group.setMetadata(ArtifactStore.METADATA_CHANGELOG, changeLog);
-                repositoryService.createStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", indyObjectMapper.writeValueAsString(group));
+                logger.debug( "Group repository {} created.", group.getName() );
             }
             catch ( Exception e )
             {
