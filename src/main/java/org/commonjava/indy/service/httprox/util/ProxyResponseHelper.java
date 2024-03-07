@@ -161,6 +161,12 @@ public class ProxyResponseHelper
                 try
                 {
                     response = repositoryService.getStore(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "group", groupName);
+
+                    if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                    {
+                        group = (Group)response.readEntity(ArtifactStore.class);
+                        cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                    }
                 }
                 catch ( WebApplicationException e )
                 {
@@ -178,11 +184,14 @@ public class ProxyResponseHelper
                         throw new IndyProxyException("Get artifact store error.", e);
                     }
                 }
-                if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                finally
                 {
-                    group = (Group)response.readEntity(ArtifactStore.class);
-                    cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                    if ( response != null )
+                    {
+                        response.close();
+                    }
                 }
+
                 return group;
             }
             else
@@ -194,6 +203,19 @@ public class ProxyResponseHelper
                 try
                 {
                     response = repositoryService.getRemoteByUrl(PackageTypeConstants.PKG_TYPE_GENERIC_HTTP, "remote", baseUrl);
+
+                    if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                    {
+                        StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+                        for( RemoteRepository remoteRepository : dto.getItems() )
+                        {
+                            if ( remoteRepository.getMetadata( TRACKING_ID ) == null )
+                            {
+                                remote = remoteRepository;
+                                break;
+                            }
+                        }
+                    }
                 }
                 catch ( WebApplicationException e  )
                 {
@@ -211,19 +233,15 @@ public class ProxyResponseHelper
                         throw new IndyProxyException("Get artifact store error.", e);
                     }
                 }
-
-                if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+                finally
                 {
-                    StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
-                    for( RemoteRepository remoteRepository : dto.getItems() )
+                    if ( response != null )
                     {
-                        if ( remoteRepository.getMetadata( TRACKING_ID ) == null )
-                        {
-                            remote = remoteRepository;
-                            break;
-                        }
+                        response.close();
                     }
                 }
+
+
                 return remote;
             }
         }
@@ -359,6 +377,25 @@ public class ProxyResponseHelper
         try
         {
             response = repositoryService.getRemoteByUrl(GENERIC_PKG_KEY, "remote", baseUrl);
+
+            if ( response != null && response.getStatus() == HttpStatus.SC_OK )
+            {
+                StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
+                Predicate<ArtifactStore> filter = ((RepoCreator)repoCreator).getNameFilter( name );
+                List<String> l = dto.getItems().stream()
+                        .filter( filter )
+                        .map( repository -> repository.getName() )
+                        .collect( Collectors.toList() );
+                if ( l.isEmpty() )
+                {
+                    return name;
+                }
+                return ((RepoCreator)repoCreator).getNextName( l );
+            }
+            else
+            {
+                return name;
+            }
         }
         catch ( WebApplicationException e )
         {
@@ -366,25 +403,17 @@ public class ProxyResponseHelper
             {
                 return name;
             }
-        }
-
-        if ( response != null && response.getStatus() == HttpStatus.SC_OK )
-        {
-            StoreListingDTO<RemoteRepository> dto = response.readEntity(StoreListingDTO.class);
-            Predicate<ArtifactStore> filter = ((RepoCreator)repoCreator).getNameFilter( name );
-            List<String> l = dto.getItems().stream()
-                                            .filter( filter )
-                                            .map( repository -> repository.getName() )
-                                            .collect( Collectors.toList() );
-            if ( l.isEmpty() )
+            else
             {
-                return name;
+                throw new IndyProxyException("Get remote repository error.", e);
             }
-            return ((RepoCreator)repoCreator).getNextName( l );
         }
-        else
+        finally
         {
-            return name;
+            if ( response != null )
+            {
+                response.close();
+            }
         }
     }
 
