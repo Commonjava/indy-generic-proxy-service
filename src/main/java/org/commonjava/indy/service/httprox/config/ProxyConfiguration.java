@@ -20,7 +20,7 @@ import org.commonjava.indy.model.core.PathStyle;
 import org.commonjava.indy.service.httprox.model.TrackingType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Optional;
 
 @Startup
@@ -41,6 +41,10 @@ public class ProxyConfiguration
     private static final int DEFAULT_WORKER_TASK_THREADS = 10;
 
     private static final String DEFAULT_STORAGE_PATH_STYLE = PathStyle.hashed.name();
+
+    private static final int DEFAULT_EXECUTOR_MAX_ASYNC = 50;
+
+    private static final int DEFAULT_EXECUTOR_MAX_QUEUED = 20;
 
     @ConfigProperty(name = "proxy.port")
     Optional<Integer> port;
@@ -80,6 +84,12 @@ public class ProxyConfiguration
 
     @ConfigProperty(name="storage.path.style")
     public String storagePathStyle;
+
+    @ConfigProperty(name="executor.mitm-transfers.max-async")
+    public Integer mitmMaxAsync;
+
+    @ConfigProperty(name="executor.mitm-transfers.max-queued")
+    public Integer mitmMaxQueued;
 
     public Integer getPort() {
         return port.orElse(8081);
@@ -203,5 +213,21 @@ public class ProxyConfiguration
 
     public void setHighWater(Integer highWater) {
         this.highWater = highWater;
+    }
+
+    public Integer getMitmMaxAsync() {
+        return mitmMaxAsync == null ? DEFAULT_EXECUTOR_MAX_ASYNC : mitmMaxAsync;
+    }
+
+    public void setMitmMaxAsync(Integer mitmMaxAsync) {
+        this.mitmMaxAsync = mitmMaxAsync;
+    }
+
+    public Integer getMitmMaxQueued() {
+        return mitmMaxQueued == null ? DEFAULT_EXECUTOR_MAX_QUEUED : mitmMaxQueued;
+    }
+
+    public void setMitmMaxQueued(Integer mitmMaxQueued) {
+        this.mitmMaxQueued = mitmMaxQueued;
     }
 }

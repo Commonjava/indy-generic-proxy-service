@@ -39,8 +39,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static javax.ws.rs.HttpMethod.GET;
-import static javax.ws.rs.HttpMethod.HEAD;
+import static jakarta.ws.rs.HttpMethod.GET;
+import static jakarta.ws.rs.HttpMethod.HEAD;
 import static org.commonjava.indy.service.httprox.util.CertUtils.*;
 import static org.commonjava.indy.service.httprox.util.HttpProxyConstants.GET_METHOD;
 import static org.commonjava.indy.service.httprox.util.PortFinder.findOpenPort;

@@ -51,6 +51,11 @@ service_proxy:
       port: 8080
       path-pattern: /api/.+
 
+executor:
+  mitm-transfers:
+    max-async: 100
+    max-queued: 50
+
 ## [MITM]
 MITM:
   enabled: true

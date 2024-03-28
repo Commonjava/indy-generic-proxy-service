@@ -26,9 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.xnio.*;
 import org.xnio.channels.AcceptingChannel;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
