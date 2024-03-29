@@ -20,12 +20,12 @@
     <parent>
         <groupId>org.commonjava</groupId>
         <artifactId>service-parent</artifactId>
-        <version>2</version>
+        <version>5-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.commonjava.indy.service</groupId>
     <artifactId>indy-generic-proxy-service</artifactId>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <name>Indy :: Service :: Generic Proxy</name>
 
     <scm>
@@ -45,7 +45,7 @@
         <weftVersion>1.22</weftVersion>
         <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
-        <infinispanVersion>12.1.11.Final</infinispanVersion>
+        <infinispanVersion>14.0.21.Final</infinispanVersion>
     </properties>
 
     <dependencyManagement>
@@ -129,11 +129,6 @@
             <artifactId>indy-model-core-java</artifactId>
             <version>${indyModelVersion}</version>
         </dependency>
-        <dependency>
-            <groupId>org.commonjava.cdi.util</groupId>
-            <artifactId>weft</artifactId>
-            <version>${weftVersion}</version>
-        </dependency>
         
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -177,18 +172,22 @@
 
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
+            <artifactId>infinispan-core-jakarta</artifactId>
             <version>${infinispanVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-commons</artifactId>
+            <artifactId>infinispan-commons-jakarta</artifactId>
             <version>${infinispanVersion}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>23.6-jre</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
         </dependency>
     </dependencies>
 
@@ -201,7 +200,7 @@
         </resources>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
             </plugin>
             <plugin>

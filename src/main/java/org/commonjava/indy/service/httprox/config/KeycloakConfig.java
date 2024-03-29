@@ -18,7 +18,7 @@ package org.commonjava.indy.service.httprox.config;
 import io.quarkus.runtime.Startup;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Properties;
 
 @Startup

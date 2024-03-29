@@ -16,6 +16,7 @@
 package org.commonjava.indy.service.httprox.handler;
 
 import io.opentelemetry.api.trace.Span;
+import jakarta.inject.Named;
 import org.commonjava.indy.model.core.io.IndyObjectMapper;
 import org.commonjava.indy.service.httprox.client.content.ContentRetrievalService;
 import org.commonjava.indy.service.httprox.client.repository.RepositoryService;
@@ -24,6 +25,7 @@ import org.commonjava.indy.service.httprox.keycloak.KeycloakProxyAuthenticator;
 import org.commonjava.indy.service.httprox.util.CacheProducer;
 import org.commonjava.indy.service.httprox.util.OtelAdapter;
 import org.commonjava.indy.service.httprox.util.RepoCreator;
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,9 @@ import org.xnio.channels.AcceptingChannel;
 import org.xnio.conduits.ConduitStreamSinkChannel;
 import org.xnio.conduits.ConduitStreamSourceChannel;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.io.IOException;
 
 import static org.commonjava.indy.pkg.PackageTypeConstants.PKG_TYPE_GENERIC_HTTP;
@@ -60,7 +62,8 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
     KeycloakProxyAuthenticator proxyAuthenticator;
 
     @Inject
-    ProxyTransfersExecutor proxyExecutor;
+    @Named("mitm-transfers")
+    ManagedExecutor proxyExecutor;
 
     @Inject
     OtelAdapter otel;
@@ -116,7 +119,7 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator( config );
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor.getExecutor(), proxyAuthenticator, objectMapper, cacheProducer, start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor, proxyAuthenticator, objectMapper, cacheProducer, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);
