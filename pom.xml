@@ -40,9 +40,9 @@
         <xnioVersion>3.8.8.Final</xnioVersion>
         <httpcoreVersion>4.4.9</httpcoreVersion>
         <httpclientVersion>4.5.13</httpclientVersion>
-        <indyModelVersion>1.5</indyModelVersion>
+        <indyModelVersion>2.0</indyModelVersion>
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
-        <weftVersion>1.22</weftVersion>
+        <weftVersion>2.0</weftVersion>
         <keycloakVersion>22.0.3</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
         <infinispanVersion>14.0.21.Final</infinispanVersion>
