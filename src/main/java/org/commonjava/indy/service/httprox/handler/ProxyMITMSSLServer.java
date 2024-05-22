@@ -15,7 +15,6 @@
  */
 package org.commonjava.indy.service.httprox.handler;
 
-import org.apache.commons.io.IOUtils;
 import org.commonjava.indy.model.core.ArtifactStore;
 import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.util.*;
@@ -33,7 +32,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +53,7 @@ public class ProxyMITMSSLServer implements Runnable
 
     private static final int GET_SOCKET_CHANNEL_WAIT_TIME_IN_MILLISECONDS = 500;
 
-    private static final int ACCEPT_SOCKET_WAIT_TIME_IN_MILLISECONDS = 20000;
+    private static final int ACCEPT_SOCKET_TIMEOUT_IN_MILLISECONDS = 20000;
 
     private final String host;
 
@@ -73,10 +71,12 @@ public class ProxyMITMSSLServer implements Runnable
 
     private volatile boolean isCancelled = false;
 
-    private ProxyMeter meterTemplate;
+    private final ProxyMeter meterTemplate;
+
+    private final HttpConduitWrapper httpConduitWrapper;
 
     public ProxyMITMSSLServer( String host, int port, String trackingId, UserPass proxyUserPass,
-                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter)
+                               ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter, HttpConduitWrapper httpConduitWrapper)
     {
         this.host = host;
         this.port = port;
@@ -85,7 +85,7 @@ public class ProxyMITMSSLServer implements Runnable
         this.proxyResponseHelper = proxyResponseHelper;
         this.config = config;
         this.meterTemplate = meter;
-
+        this.httpConduitWrapper = httpConduitWrapper;
     }
 
     @Override
@@ -97,16 +97,39 @@ public class ProxyMITMSSLServer implements Runnable
         }
         catch ( Exception e )
         {
-            logger.warn( "Exception failed", e );
+            logger.warn( "Execution failed", e );
+        }
+        finally
+        {
+            closeProperly();
+        }
+    }
+
+    /**
+     * Close the MIMT server properly when it is completed or broken. This will close sinkChannel and
+     * consequently close sourceChannel via sinkChannel.getCloseSetter().set(...) in ProxyResponseWriter.
+     */
+    private void closeProperly()
+    {
+        if (httpConduitWrapper.isOpen())
+        {
+            try
+            {
+                httpConduitWrapper.close();
+            }
+            catch (IOException e)
+            {
+                logger.warn("Close conduit failed", e);
+            }
         }
     }
 
     private volatile boolean started;
 
-    private char[] keystorePassword = "password".toCharArray(); // keystore password can not be null
+    private final char[] keystorePassword = "password".toCharArray(); // keystore password can not be null
 
     // TODO: What are the memory footprint implications of this? It seems like these will never be purged.
-    private static Map<String, HostContext> hostContextMap = new ConcurrentHashMap(); // cache keystore and socket factory, key: hostname
+    private static final Map<String, HostContext> hostContextMap = new ConcurrentHashMap(); // cache keystore and socket factory, key: hostname
 
     /**
      * Generate the keystore on-the-fly and initiate SSL socket factory.
@@ -167,29 +190,23 @@ public class ProxyMITMSSLServer implements Runnable
         // TODO: What is the performance implication of opening a new server socket each time? Should we try to cache these?
         try ( ServerSocket sslServerSocket = sslServerSocketFactory.createServerSocket( serverPort ) )
         {
-
-            sslServerSocket.setSoTimeout( ACCEPT_SOCKET_WAIT_TIME_IN_MILLISECONDS ); //in case the response handler times out
+            sslServerSocket.setSoTimeout( ACCEPT_SOCKET_TIMEOUT_IN_MILLISECONDS ); //in case the response handler times out
             started = true;
+            logger.debug( "MITM server started, {}", sslServerSocket );
+            long startNanos = System.nanoTime();
 
             if ( !isCancelled )
             {
                 try ( Socket socket = sslServerSocket.accept() )
                 {
-                    logger.debug( "MITM server started, {}", sslServerSocket );
-                    long startNanos = System.nanoTime();
                     String method = null;
                     String requestLine = null;
 
-                    meter = meterTemplate.copy( startNanos, method, requestLine );
-
                     socket.setSoTimeout( (int) TimeUnit.MINUTES.toMillis( config.getMITMSoTimeoutMinutes() ) );
-
                     logger.debug( "MITM server accepted" );
-                    BufferedReader in = null;
-                    try
-                    {
-                        in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) );
 
+                    try (BufferedReader in = new BufferedReader( new InputStreamReader( socket.getInputStream() ) ))
+                    {
                         // TODO: Should we implement a while loop around this with some sort of read timeout, in case multiple requests are inlined?
                         // In principle, any sort of network communication is permitted over this port, but even if we restrict this to
                         // HTTPS only, couldn't there be multiple requests over the port at a time?
@@ -198,7 +215,7 @@ public class ProxyMITMSSLServer implements Runnable
                         String line;
                         while ( ( line = in.readLine() ) != null )
                         {
-                            sb.append( line + "\n" );
+                            sb.append(line).append("\n");
                             if ( line.startsWith( GET ) || line.startsWith( HEAD ) ) // only care about GET/HEAD
                             {
                                 String[] toks = line.split("\\s+");
@@ -212,6 +229,7 @@ public class ProxyMITMSSLServer implements Runnable
                                 break;
                             }
                         }
+                        meter = meterTemplate.copy( startNanos, method, requestLine );
 
                         logger.debug( "Request:\n{}", sb );
 
@@ -234,26 +252,7 @@ public class ProxyMITMSSLServer implements Runnable
                     catch ( Exception e )
                     {
                         logger.error( "Exception failed with client hostname: {}, on port: {}.", host, port, e );
-                        if ( !socket.isClosed() )
-                        {
-                            try (BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
-                                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null))
-                            {
-                                http.writeError(e);
-                                http.writeClose();
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if ( in != null )
-                        {
-                            in.close();
-                            if ( !socket.isClosed() )
-                            {
-                                socket.close();
-                            }
-                        }
+                        sendError(socket, e);
                     }
                 }
             }
@@ -267,6 +266,23 @@ public class ProxyMITMSSLServer implements Runnable
             }
             isCancelled = false;
             started = false;
+        }
+    }
+
+    private void sendError(Socket socket, Exception e)
+    {
+        if ( !socket.isClosed() )
+        {
+            try (BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream());
+                 HttpConduitWrapper http = new HttpConduitWrapper(new OutputStreamSinkChannel(out), null))
+            {
+                http.writeError(e);
+                http.writeClose();
+            }
+            catch (IOException ex)
+            {
+                logger.error("Send error failed", e);
+            }
         }
     }
 

@@ -95,7 +95,7 @@ public final class ProxyResponseWriter
         this.tunnelAndMITMExecutor = executor;
         this.proxyAuthenticator = proxyAuthenticator;
         this.indyObjectMapper = indyObjectMapper;
-        startNanos = start;
+        this.startNanos = start;
         this.cacheProducer = cacheProducer;
         this.otel = otel;
     }
@@ -145,13 +145,20 @@ public final class ProxyResponseWriter
         final String oldThreadName = Thread.currentThread().getName();
         Thread.currentThread().setName("PROXY-" + httpRequest.getRequestLine().toString());
         sinkChannel.getCloseSetter().set((c) -> {
-            logger.trace("Sink channel closing.");
-            Thread.currentThread().setName(oldThreadName);
-
+            logger.trace("Sink channel closing...");
+            Thread.currentThread().setName(oldThreadName); // restore original thread name
             if ( sslTunnel != null )
             {
                 logger.trace( "Close ssl tunnel" );
                 sslTunnel.close();
+            }
+            try
+            {
+                sourceChannel.close();
+            }
+            catch (IOException e)
+            {
+                logger.warn("Close source channel failed", e);
             }
         });
 
@@ -265,7 +272,7 @@ public final class ProxyResponseWriter
 
                                 ProxyMITMSSLServer svr =
                                         new ProxyMITMSSLServer( host, port, trackingId, proxyUserPass,
-                                                proxyResponseHelper, config, meter );
+                                                proxyResponseHelper, config, meter, http );
                                 tunnelAndMITMExecutor.submit( svr );
                                 socketChannel = svr.getSocketChannel();
 
