@@ -40,8 +40,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -49,9 +47,7 @@ public final class ProxyRequestReader
         implements ChannelListener<ConduitStreamSourceChannel> {
     private static final int AWAIT_READABLE_IN_MILLISECONDS = 100;
 
-    private static final List<Character> HEAD_END = Collections.unmodifiableList(
-            Arrays.asList( Character.valueOf( '\r' ), Character.valueOf( '\n' ), Character.valueOf( '\r' ),
-                    Character.valueOf( '\n' ) ) );
+    private static final List<Character> HEAD_END = List.of('\r', '\n', '\r', '\n');
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ProxyResponseWriter writer;
@@ -230,5 +226,6 @@ public final class ProxyRequestReader
     {
         this.sslTunnel = sslTunnel;
     }
+
 
 }

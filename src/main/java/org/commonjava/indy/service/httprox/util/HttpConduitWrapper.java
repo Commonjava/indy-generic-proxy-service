@@ -170,9 +170,13 @@ public class HttpConduitWrapper
         return result;
     }
 
-    public void close()
-            throws IOException {
-        flush(sinkChannel);
-        sinkChannel.shutdownWrites();
+    public void close() throws IOException
+    {
+        if ( isOpen() )
+        {
+            flush(sinkChannel);
+            sinkChannel.shutdownWrites();
+            sinkChannel.close();
+        }
     }
 }

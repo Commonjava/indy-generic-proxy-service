@@ -119,7 +119,8 @@ public class ProxyAcceptHandler implements ChannelListener<AcceptingChannel<Stre
         ProxyRepositoryCreator repoCreator = new RepoCreator( config );
 
         final ProxyResponseWriter writer =
-                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService, proxyExecutor, proxyAuthenticator, objectMapper, cacheProducer, start, otel );
+                new ProxyResponseWriter( config, repoCreator, accepted, repositoryService, contentRetrievalService,
+                        proxyExecutor, proxyAuthenticator, objectMapper, cacheProducer, start, otel );
 
         logger.debug("Setting writer: {}", writer);
         sink.getWriteSetter().set(writer);

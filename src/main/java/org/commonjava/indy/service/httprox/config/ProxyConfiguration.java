@@ -30,7 +30,7 @@ public class ProxyConfiguration
 
     private static final boolean DEFAULT_SECURED = false;
 
-    private static final int DEFAULT_MITM_SO_TIMEOUT_MINUTES = 30;
+    private static final int DEFAULT_MITM_SO_TIMEOUT_MINUTES = 3;
 
     private static final String DEFAULT_TRACKING_TYPE = TrackingType.SUFFIX.name();
 
