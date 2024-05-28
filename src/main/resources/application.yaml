@@ -9,11 +9,11 @@ quarkus:
         level: DEBUG
       "org.commonjava.indy.model":
         level: ERROR
-  opentelemetry:
+  otel:
     enabled: true
-    tracer:
-      exporter:
-        otlp:
+    exporter:
+      otlp:
+        traces:
         # This is for sending to something like opentelemetry-collector
         # endpoint: http://localhost:4317
 
