@@ -32,7 +32,7 @@ public class OtelAdapter
         rb.header( key, value );
     };
 
-    @ConfigProperty( name = "quarkus.opentelemetry.enabled" )
+    @ConfigProperty( name = "quarkus.otel.enabled" )
     Boolean enabled;
 
     public boolean enabled()
@@ -42,7 +42,7 @@ public class OtelAdapter
 
     public Span newClientSpan(String adapterName, String name )
     {
-        if ( !enabled )
+        if ( !enabled() )
         {
             return null;
         }
@@ -57,7 +57,7 @@ public class OtelAdapter
 
     public void injectContext( Request.Builder requestBuilder )
     {
-        if ( !enabled )
+        if ( !enabled() )
         {
             return;
         }
