@@ -42,6 +42,7 @@ import java.nio.channels.SocketChannel;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.codec.digest.DigestUtils.sha256Hex;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.commonjava.indy.model.core.ArtifactStore.TRACKING_ID;
 import static org.commonjava.indy.service.httprox.util.ApplicationHeader.proxy_authenticate;
 import static org.commonjava.indy.service.httprox.util.ApplicationStatus.PROXY_AUTHENTICATION_REQUIRED;
@@ -115,7 +116,6 @@ public final class ProxyResponseWriter
 
     private void doHandleEvent(final ConduitStreamSinkChannel sinkChannel)
     {
-
         if ( directed )
         {
             return;
@@ -131,14 +131,10 @@ public final class ProxyResponseWriter
                 logger.debug("Handling error from request reader: " + error.getMessage(), error);
                 handleError(error, http);
             } else {
-                logger.debug("Invalid state (no error or request) from request reader. Sending 400.");
-                try {
-                    http.writeStatus(ApplicationStatus.BAD_REQUEST);
-                } catch (final IOException e) {
-                    logger.error("Failed to write BAD REQUEST for missing HTTP first-line to response channel.", e);
-                }
+                handleBadRequest(http);
             }
-
+            closeQuietly(sinkChannel);
+            closeQuietly(sourceChannel);
             return;
         }
 
@@ -302,7 +298,6 @@ public final class ProxyResponseWriter
                         }
                     }
                 }
-
                 logger.debug("Response complete.");
             } catch (final Throwable e) {
                 error = e;
@@ -313,22 +308,25 @@ public final class ProxyResponseWriter
             handleError(error, http);
         }
 
-        try
+        if ( directed )
         {
-            if ( directed )
-            {
-                // do not close sink channel
-            }
-            else
-            {
-                http.close();
-            }
+            // do not close sink channel
         }
-        catch (final IOException e)
+        else
         {
-            logger.error("Failed to shutdown response", e);
+            closeQuietly( http );
+            closeQuietly( sinkChannel );
+            closeQuietly( sourceChannel );
         }
+    }
 
+    private void handleBadRequest(HttpConduitWrapper http) {
+        logger.warn("Invalid state (no error or request) from request reader. Sending 400.");
+        try {
+            http.writeStatus(ApplicationStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            logger.warn("Failed to write BAD_REQUEST", e);
+        }
     }
 
     private String generateAuthCacheKey( UserPass proxyUserPass )
@@ -342,11 +340,10 @@ public final class ProxyResponseWriter
             if (http.isOpen()) {
                 http.writeStatus(ApplicationStatus.SERVER_ERROR);
                 http.writeError(error);
-
                 logger.debug("Response error complete.");
             }
-        } catch (final IOException closeException) {
-            logger.error("Failed to close httprox request: " + error.getMessage(), error);
+        } catch (final IOException e) {
+            logger.warn("Failed to write error: " + error.getMessage(), error);
         }
     }
 
