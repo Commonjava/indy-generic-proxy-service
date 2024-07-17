@@ -105,8 +105,7 @@ public class HttpConduitWrapper
                 {
                     if ( header.getFirst().equalsIgnoreCase( ApplicationHeader.content_length.key() )
                             || header.getFirst().equalsIgnoreCase( ApplicationHeader.last_modified.key() )
-                                || header.getFirst().equalsIgnoreCase( ApplicationHeader.content_type.key() )
-                                    || header.getFirst().equalsIgnoreCase( ApplicationHeader.transfer_encoding.key() ))
+                                || header.getFirst().equalsIgnoreCase( ApplicationHeader.content_type.key() ))
                     {
                         writeHeader(header.getFirst(), header.getSecond());
                     }
