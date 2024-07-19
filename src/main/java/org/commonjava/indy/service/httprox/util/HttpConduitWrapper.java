@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.commonjava.indy.service.httprox.util.ChannelUtils.*;
 
@@ -94,6 +95,8 @@ public class HttpConduitWrapper
     {
         Logger logger = LoggerFactory.getLogger( getClass() );
         logger.debug( "Valid transfer found, {}", txfr );
+
+        AtomicBoolean chunked = new AtomicBoolean(false);
         try
         {
 
@@ -105,15 +108,24 @@ public class HttpConduitWrapper
                 {
                     if ( header.getFirst().equalsIgnoreCase( ApplicationHeader.content_length.key() )
                             || header.getFirst().equalsIgnoreCase( ApplicationHeader.last_modified.key() )
-                                || header.getFirst().equalsIgnoreCase( ApplicationHeader.content_type.key() ))
+                                || header.getFirst().equalsIgnoreCase( ApplicationHeader.content_type.key() )
+                                    || header.getFirst().equalsIgnoreCase(ApplicationHeader.transfer_encoding.key() ))
                     {
                         writeHeader(header.getFirst(), header.getSecond());
+                    }
+
+                    if ( header.getFirst().equalsIgnoreCase(ApplicationHeader.transfer_encoding.key() )
+                            && header.getSecond().equalsIgnoreCase( "chunked") )
+                    {
+                        chunked.set(true);
                     }
                 } catch (IOException e)
                 {
                     logger.error("Write header error: {}", e.getMessage(), e);
                 }
             } );
+
+            writeHeader("Connection", "close");
 
             logger.trace( "Write body, {}", writeBody );
             if ( writeBody )
@@ -127,11 +139,29 @@ public class HttpConduitWrapper
                 logger.trace( "Read transfer..." );
                 while ( ( read = txfr.read( buf ) ) > -1 )
                 {
+                    if ( chunked.get() )
+                    {
+                        // writes the chunk size (in hexadecimal)
+                        sinkChannel.write(ByteBuffer.wrap((Integer.toHexString(read) + "\r\n").getBytes()));
+                    }
+
                     logger.trace( "Read transfer and write to channel, size: {}", read );
                     bbuf.clear();
                     bbuf.put( buf, 0, read );
                     bbuf.flip();
                     write( sinkChannel, bbuf );
+
+                    if ( chunked.get() )
+                    {
+                        // writes the chunk data followed by \r\n.
+                        sinkChannel.write(ByteBuffer.wrap("\r\n".getBytes()));
+                    }
+                }
+
+                if ( chunked.get() )
+                {
+                    // Write the final chunk (0-length) to signal the end of the response
+                    sinkChannel.write(ByteBuffer.wrap("0\r\n\r\n".getBytes()));
                 }
             }
         }
