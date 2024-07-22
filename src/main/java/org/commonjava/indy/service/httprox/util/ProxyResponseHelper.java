@@ -522,6 +522,7 @@ public class ProxyResponseHelper
                             if ( response != null && responseBody != null )
                             {
                                 responseBody.close();
+                                response.close();
                             }
                             transferred = true;
                             transferLatch.countDown();
