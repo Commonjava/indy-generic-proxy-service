@@ -75,6 +75,10 @@ public class ProxyMITMSSLServer implements Runnable
 
     private final HttpConduitWrapper httpConduitWrapper;
 
+    private ProxySSLTunnel sslTunnel;
+
+    private final static long MAX_WAIT_TIME_IN_MILLIS = 60 * 1000;
+
     public ProxyMITMSSLServer( String host, int port, String trackingId, UserPass proxyUserPass,
                                ProxyResponseHelper proxyResponseHelper, ProxyConfiguration config, ProxyMeter meter, HttpConduitWrapper httpConduitWrapper)
     {
@@ -101,7 +105,39 @@ public class ProxyMITMSSLServer implements Runnable
         }
         finally
         {
+            if ( sslTunnel != null )
+            {
+                long startTime = System.currentTimeMillis();
+                while ( !sslTunnel.isClosed() )
+                {
+                    if (System.currentTimeMillis() - startTime > MAX_WAIT_TIME_IN_MILLIS)
+                    {
+                        logger.warn("Maximum wait time exceeded, stopping wait for SSL tunnel to close.");
+                        break;
+                    }
+                    try
+                    {
+                        logger.info("Waiting ssl tunnel to finish...");
+                        TimeUnit.MILLISECONDS.sleep( GET_SOCKET_CHANNEL_WAIT_TIME_IN_MILLISECONDS );
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (sslTunnel.isClosed())
+                {
+                    logger.info("SSL tunnel is closed.");
+                }
+                else
+                {
+                    logger.warn("SSL tunnel is still not closed after maximum wait time.");
+                }
+            }
+
             closeProperly();
+            logger.debug( "MITM server closed" );
         }
     }
 
@@ -256,7 +292,6 @@ public class ProxyMITMSSLServer implements Runnable
                     }
                 }
             }
-            logger.debug( "MITM server closed" );
         }
         finally
         {
@@ -360,5 +395,10 @@ public class ProxyMITMSSLServer implements Runnable
             return sslSocketFactory;
         }
 
+    }
+
+    public void setProxySSLTunnel( ProxySSLTunnel sslTunnel )
+    {
+        this.sslTunnel = sslTunnel;
     }
 }

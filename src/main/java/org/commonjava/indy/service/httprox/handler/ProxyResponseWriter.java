@@ -283,6 +283,7 @@ public final class ProxyResponseWriter
                                 sslTunnel = new ProxySSLTunnel( sinkChannel, socketChannel, config );
                                 tunnelAndMITMExecutor.submit( sslTunnel );
                                 proxyRequestReader.setProxySSLTunnel( sslTunnel ); // client input will be directed to target socket
+                                svr.setProxySSLTunnel( sslTunnel );
 
                                 // When all is ready, send the 200 to client. Client send the SSL handshake to reader,
                                 // reader direct it to tunnel to MITM. MITM finish the handshake and read the request data,
