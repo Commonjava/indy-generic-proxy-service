@@ -156,4 +156,10 @@ public class ProxySSLTunnel implements Runnable
             logger.error( "Close tunnel selector failed", e );
         }
     }
+
+    public boolean isClosed()
+    {
+        return closed;
+    }
+
 }
