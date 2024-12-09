@@ -44,8 +44,9 @@ public class CacheProducer
     private Cache buildCache()
     {
         Cache<String, String> cache = Caffeine.newBuilder()
-                    .expireAfterAccess(15, TimeUnit.MINUTES)
-                    .build();
+                .maximumSize( 50 )
+                .expireAfterAccess(15, TimeUnit.MINUTES)
+                .build();
         return cache;
     }
 
