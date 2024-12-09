@@ -15,44 +15,38 @@
  */
 package org.commonjava.indy.service.httprox.util;
 
-import org.infinispan.Cache;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
-
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class CacheProducer
 {
-
-    private EmbeddedCacheManager cacheManager;
 
     private Map<String, Cache> caches = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void start()
     {
-        startEmbeddedManager();
-    }
 
-    private void startEmbeddedManager()
-    {
-        cacheManager = new DefaultCacheManager();
     }
 
     public synchronized <K, V> Cache<K, V> getCache( String named )
     {
-        return caches.computeIfAbsent( named, ( k ) -> buildCache(named));
+        return caches.computeIfAbsent( named, ( k ) -> buildCache());
     }
 
-    private Cache buildCache(String named)
+    private Cache buildCache()
     {
-        cacheManager.defineConfiguration( named, new ConfigurationBuilder().build() );
-        return cacheManager.getCache(named, Boolean.TRUE);
+        Cache<String, String> cache = Caffeine.newBuilder()
+                    .expireAfterAccess(15, TimeUnit.MINUTES)
+                    .build();
+        return cache;
     }
 
 

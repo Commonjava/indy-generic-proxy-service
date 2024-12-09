@@ -33,7 +33,7 @@ import org.commonjava.indy.service.httprox.config.ProxyConfiguration;
 import org.commonjava.indy.service.httprox.handler.ProxyCreationResult;
 import org.commonjava.indy.service.httprox.handler.ProxyRepositoryCreator;
 import org.commonjava.indy.service.httprox.model.TrackingKey;
-import org.infinispan.Cache;
+import com.github.benmanes.caffeine.cache.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,9 +151,9 @@ public class ProxyResponseHelper
 
             if ( trackingId != null )
             {
-                if ( cache.get( groupName ) != null )
+                if ( cache.getIfPresent( groupName ) != null )
                 {
-                    return (ArtifactStore) cache.get( groupName );
+                    return (ArtifactStore) cache.getIfPresent( groupName );
                 }
 
                 Group group = null;
@@ -165,7 +165,7 @@ public class ProxyResponseHelper
                     if ( response != null && response.getStatus() == HttpStatus.SC_OK )
                     {
                         group = (Group)response.readEntity(ArtifactStore.class);
-                        cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                        cache.put(groupName, group);
                     }
                 }
                 catch ( WebApplicationException e )
@@ -176,7 +176,7 @@ public class ProxyResponseHelper
                                 url, trackingId );
                         ProxyCreationResult result = createRepo( trackingId, url, null );
                         group = result.getGroup();
-                        cache.put(groupName, group, 15, TimeUnit.MINUTES);
+                        cache.put(groupName, group);
                         return group;
                     }
                     else
