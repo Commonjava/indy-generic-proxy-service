@@ -176,8 +176,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-caffeine</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
