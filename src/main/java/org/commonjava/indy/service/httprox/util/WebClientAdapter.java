@@ -36,6 +36,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.TemporalUnit;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -188,6 +189,7 @@ public class WebClientAdapter
                 .writeTimeout( d )
                 .connectTimeout( d )
                 .retryOnConnectionFailure( true )
+                .protocols( Arrays.asList( Protocol.HTTP_1_1 ) )
                 .build();
     }
 
@@ -281,7 +283,7 @@ public class WebClientAdapter
                     //                    builder.addInterceptor( cleanupInterceptor );
                 }
 
-                callClient = builder.build();
+                callClient = builder.protocols( Arrays.asList(Protocol.HTTP_1_1) ).build();
             }
 
             return new CallAdapter( callClient, requestBuilder, serviceConfig );
