@@ -42,7 +42,7 @@
         <httpclientVersion>4.5.13</httpclientVersion>
         <indyModelVersion>2.0</indyModelVersion>
         <quarkus-plugin.version>2.3.0.Final</quarkus-plugin.version>
-        <keycloakVersion>22.0.3</keycloakVersion>
+        <keycloakVersion>22.0.5</keycloakVersion>
         <quarkus.package.type>uber-jar</quarkus.package.type>
         <infinispanVersion>14.0.21.Final</infinispanVersion>
     </properties>
