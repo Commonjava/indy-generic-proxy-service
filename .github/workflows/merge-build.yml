@@ -39,7 +39,7 @@ jobs:
       MAVEN_OPTS: "-Xmx4096m -Xms2048m -XX:MaxMetaspaceSize=4096m -Xss8m"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -62,7 +62,7 @@ jobs:
         run: mvn -B -e clean install
 
       - name: Checkout tools repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Commonjava/commonjava-images
           ref: ubi9
